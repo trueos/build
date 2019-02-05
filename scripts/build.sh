@@ -223,7 +223,7 @@ setup_poudriere_jail()
 	echo -e "y\n" | poudriere jail -d -j ${POUDRIERE_BASE} >/dev/null 2>/dev/null
 
 	export __MAKE_CONF=${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
-	poudriere jail -c -j $POUDRIERE_BASE -m ports=${POUDRIERE_PORTDIR} -v ${TRUEOS_VERSION}
+	poudriere jail -c -j $POUDRIERE_BASE -m ports=${POUDRIERE_PORTS} -v ${TRUEOS_VERSION}
 	if [ $? -ne 0 ] ; then
 		exit 1
 	fi
