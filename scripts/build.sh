@@ -222,8 +222,6 @@ setup_poudriere_jail()
 
 	export KERNEL_MAKE_FLAGS="$(get_kernel_flags)"
 	export WORLD_MAKE_FLAGS="$(get_world_flags)"
-	export __MAKE_CONF="${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf"
-	echo "Using __MAKE_CONF: $__MAKE_CONF"
 	poudriere jail -c -j $POUDRIERE_BASE -m ports=${POUDRIERE_PORTS} -v ${TRUEOS_VERSION}
 	if [ $? -ne 0 ] ; then
 		exit 1
