@@ -101,8 +101,6 @@ setup_poudriere_conf()
 		> ${_pdconf}
 	echo "Using zpool: $ZPOOL"
 	echo "ZPOOL=$ZPOOL" >> ${_pdconf}
-	echo "Using Dist Directory: $DIST_DIR"
-	echo "FREEBSD_HOST=file://${DIST_DIR}" >> ${_pdconf}
 	echo "Using Ports Tree: $PORTS_URL"
 	echo "USE_TMPFS=data" >> ${_pdconf}
 	echo "BASEFS=$POUDRIERE_BASEFS" >> ${_pdconf}
