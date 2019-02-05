@@ -222,6 +222,9 @@ setup_poudriere_jail()
 	# Nuke the old jail if it exists
 	echo -e "y\n" | poudriere jail -d -j ${POUDRIERE_BASE} >/dev/null 2>/dev/null
 
+	KERNEL_MAKE_FLAGS="$(get_kernel_flags)"
+	WORLD_MAKE_FLAGS="$(get_world_flags)"
+
 	export __MAKE_CONF=${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
 	poudriere jail -c -j $POUDRIERE_BASE -m ports=${POUDRIERE_PORTS} -v ${TRUEOS_VERSION}
 	if [ $? -ne 0 ] ; then
@@ -647,7 +650,7 @@ apply_iso_config()
 check_version()
 {
 	TMVER=$(jq -r '."version"' ${TRUEOS_MANIFEST} 2>/dev/null)
-	if [ "$TMVER" != "1.0" ] ; then
+	if [ "$TMVER" != "1.1" ] ; then
 		exit_err "Invalid version of MANIFEST specified"
 	fi
 }
@@ -668,6 +671,36 @@ check_build_environment()
 		echo "Missing compiler! Please install llvm first."
 		exit 1
 	fi
+}
+
+get_world_flags()
+{
+	# Check if we have any world-flags to pass back
+	for c in $(jq -r '."base-packages"."world-flags" | keys[]' ${TRUEOS_MANIFEST} 2>/dev/null | tr -s '\n' ' ')
+	do
+		eval "CHECK=\$$c"
+		if [ -z "$CHECK" -a "$c" != "default" ] ; then continue; fi
+		for i in $(jq -r '."base-packages"."world-flags"."'$c'" | join(" ")' ${TRUEOS_MANIFEST})
+		do
+			WF="$WF ${i}"
+		done
+	done
+	echo "$WF"
+}
+
+get_kernel_flags()
+{
+	# Check if we have any kernel-flags to pass back
+	for c in $(jq -r '."base-packages"."kernel-flags" | keys[]' ${TRUEOS_MANIFEST} 2>/dev/null | tr -s '\n' ' ')
+	do
+		eval "CHECK=\$$c"
+		if [ -z "$CHECK" -a "$c" != "default" ] ; then continue; fi
+		for i in $(jq -r '."base-packages"."kernel-flags"."'$c'" | join(" ")' ${TRUEOS_MANIFEST})
+		do
+			KF="$KF ${i}"
+		done
+	done
+	echo "$KF"
 }
 
 if [ ! -d 'tmp' ] ; then

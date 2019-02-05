@@ -1,7 +1,5 @@
 {
   "base-packages": {
-    "depends": { },
-    "name-prefix": "FreeNAS",
     "kernel-flags": {
       "default": [
         "KERNCONF=IXNAS"
@@ -104,6 +102,8 @@
         "net-mgmt/net-snmp",
         "net-mgmt/netdata",
         "net-mgmt/sipcalc",
+	"os/kernel",
+	"os/userland",
         "print/harfbuzz",
         "security/ca_root_nss",
         "security/cyrus-sasl2-gssapi",
@@ -198,34 +198,6 @@
 	"/usr/lib32"
       ]
     },
-    "prune-dist-packages": {
-      "default" : [
-	  "(FreeNAS-svn-)",
-	  "(FreeNAS-ipf-)",
-	  "(FreeNAS-pf-)",
-	  "(FreeNAS-lldb-)",
-	  "(FreeNAS-tests-)",
-	  "(FreeNAS-).+(-profile-)",
-	  "(FreeNAS-).+(-development-)",
-	  "(FreeNAS-).+(-debug-)"
-        ]
-    },
-    "ignore-base-packages": [
-        "-clang-",
-        "-gdb-",
-        "-lldb-",
-        "-ipf-",
-        "-pf-",
-        "-sendmail-",
-        "-ssh-",
-        "-svn-",
-        "-unbound-",
-        "-tests",
-        "-rescue",
-        "-development",
-        "-profile",
-        "-debug"
-    ],
     "file-name": "FreeNAS-12-unstable-x64-%%GITHASH%%-%%DATE%%",
     "install-script": "",
     "iso-packages": {
@@ -429,5 +401,5 @@
     "BUILD_AS_NON_ROOT=no",
     "RESTRICT_NETWORKING=no"
   ],
-  "version": "1.0"
+  "version": "1.1"
 }
