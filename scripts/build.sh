@@ -456,6 +456,7 @@ base: {
   enabled: yes
 }
 EOF
+
 }
 
 clean_iso_dir()
@@ -470,20 +471,21 @@ clean_iso_dir()
 
 cp_iso_pkgs()
 {
-	mk_repo_config
-
 	clean_iso_dir
+
+	mk_repo_config
 
 	mkdir -p "${PKG_DISTDIR}"
 
-	BASE_PACKAGES="os/userland os/kernel"
+	BASE_PACKAGES="userland kernel"
 
 	# Install the base packages into ISODIR
 	for pkg in ${BASE_PACKAGES}
 	do
+		pkgFile=$(ls ${POUDRIERE_PKGDIR}/${pkg}-[0-9]*.txz)
 		pkg-static -r ${ISODIR} -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh \
 			-R tmp/repo-config \
-			install -y ${pkg}
+			add -y ${pkgFile}
 		if [ $? -ne 0 ] ; then
 			exit_err "Failed installing base packages to ISO..."
 		fi
@@ -667,6 +669,11 @@ apply_iso_config()
 
 }
 
+mk_iso_file()
+{
+	sh scripts/mkisoimages.sh -b INSTALLER install.iso tmp/iso || exit 1
+}
+
 check_version()
 {
 	TMVER=$(jq -r '."version"' ${TRUEOS_MANIFEST} 2>/dev/null)
@@ -739,6 +746,7 @@ fi
 case $1 in
 	clean) env_check
 	       clean_jails
+	       clean_iso_dir
 	       exit 0
 	       ;;
 	poudriere) env_check
@@ -751,6 +759,7 @@ case $1 in
 	     fi
 	     setup_iso_post
 	     apply_iso_config
+	     mk_iso_file
 	     ;;
 	check)  env_check
 		check_build_environment
