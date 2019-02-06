@@ -128,6 +128,12 @@ setup_poudriere_ports()
 {
 	echo "Setting up poudriere jail"
 
+	# Delete previous ports tree
+	poudriere ports -l | grep -q -w ${POUDRIERE_PORTS}
+	if [ $? -eq 0 ]; then
+		echo -e "y\n" | poudriere ports -d -p ${POUDRIERE_PORTS}
+	fi
+
 	# Make sure the various /tmp(s) will work for poudriere
 	#chmod 777 ${JDIR}/tmp
 	#chmod -R 777 ${JDIR}/var/tmp
@@ -208,17 +214,23 @@ setup_poudriere_ports()
 
 setup_poudriere_jail()
 {
-	# Check if we need to build the jail - skip if existing pkg is updated
-	pkgName=$(make -C ${POUDRIERE_PORTDIR}/os/src -V PKGNAME PORTSDIR=${POUDRIERE_PORTDIR} __MAKE_CONF=${OBJDIR}/poudriere.d/${POUDRIERE_BASE}}-make.conf)
-	if [ -e "${POUDRIERE_PKGDIR}/All/${pkgName}.txz" ] ; then
-		echo "Using existing ${POUDRIERE_BASE} jail"
-		return 0
+	poudriere jail -l | grep -q -w "${POUDRIERE_BASE}"
+	if [ $? -eq 0 ] ; then
+		echo "Checking existing jail"
+
+		# Check if we need to build the jail - skip if existing pkg is updated
+		pkgName=$(make -C ${POUDRIERE_PORTDIR}/os/src -V PKGNAME PORTSDIR=${POUDRIERE_PORTDIR} __MAKE_CONF=${OBJDIR}/poudriere.d/${POUDRIERE_BASE}}-make.conf)
+		echo "Looking for ${POUDRIERE_PKGDIR}/All/${pkgName}.txz"
+		if [ -e "${POUDRIERE_PKGDIR}/All/${pkgName}.txz" ] ; then
+			echo "Using existing ${POUDRIERE_BASE} jail"
+			return 0
+		fi
+
+		# Remove old version
+		echo -e "y\n" | poudriere jail -d -j ${POUDRIERE_BASE}
 	fi
 
 	echo "Rebuilding ${POUDRIERE_BASE} jail"
-
-	# Nuke the old jail if it exists
-	echo -e "y\n" | poudriere jail -d -j ${POUDRIERE_BASE} >/dev/null 2>/dev/null
 
 	export KERNEL_MAKE_FLAGS="$(get_kernel_flags)"
 	export WORLD_MAKE_FLAGS="$(get_world_flags)"
@@ -416,14 +428,13 @@ check_essential_pkgs()
 
 clean_jails()
 {
-	setup_poudriere_conf
 	clean_poudriere
 	super_clean_poudriere
 }
 
 run_poudriere()
 {
-	clean_jails
+	setup_poudriere_conf
 	setup_poudriere_ports
 	setup_poudriere_jail
 	build_poudriere
