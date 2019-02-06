@@ -34,9 +34,13 @@ POUDRIERE_BASE=${POUDRIERE_BASE:-trueos-mk-base}
 POUDRIERE_PORTS=${POUDRIERE_PORTS:-trueos-mk-ports}
 PKG_CMD=${PKG_CMD:-pkg-static}
 
+POUDRIERE_JAILDIR="${POUDRIERE_BASEFS}/jails/${POUDRIERE_BASE}"
 POUDRIERE_PORTDIR="${POUDRIERE_BASEFS}/ports/${POUDRIERE_PORTS}"
 POUDRIERE_PKGDIR="${POUDRIERE_BASEFS}/data/packages/${POUDRIERE_BASE}-${POUDRIERE_PORTS}"
 POUDRIERED_DIR=/usr/local/etc/poudriere.d
+
+ISODIR="tmp/iso"
+PKG_DISTDIR="${ISODIR}/dist/packages"
 
 exit_err()
 {
@@ -442,40 +446,62 @@ run_poudriere()
 
 mk_repo_config()
 {
-	rm -rf ${OBJDIR}/repo-config
-	mkdir -p ${OBJDIR}/repo-config
+	rm -rf tmp/repo-config
+	mkdir -p tmp/repo-config
 
-	cat >${OBJDIR}/repo-config/repo.conf <<EOF
+	cat >tmp/repo-config/repo.conf <<EOF
 base: {
-  url: "file://${PKG_DIR}",
+  url: "file://${POUDRIERE_PKGDIR}",
   signature_type: "none",
   enabled: yes
 }
 EOF
-	PKG_VERSION=$(readlink ${PKG_DIR}/../repo/${ABI_DIR}/latest)
-	mkdir -p ${TARGET_DIR}/${ABI_DIR}/${PKG_VERSION}
-	ln -s ${PKG_VERSION} ${TARGET_DIR}/${ABI_DIR}/latest
+}
+
+clean_iso_dir()
+{
+	if [ ! -d "${ISODIR}" ] ; then
+		return 0
+	fi
+	rm -rf ${ISODIR} >/dev/null 2>/dev/null
+	chflags -R noschg ${ISODIR} >/dev/null 2>/dev/null
+	rm -rf ${ISODIR}
 }
 
 cp_iso_pkgs()
 {
 	mk_repo_config
 
-	# Figure out the BASE PREFIX for base packages
-	BASENAME=$(jq -r '."base-packages"."name-prefix"' ${TRUEOS_MANIFEST})
-	if [ "$BASENAME" = "null" ] ; then
-		BASENAME="FreeBSD"
-	fi
+	clean_iso_dir
 
-	# Copy over the base system packages
-	pkg-static -o ABI_FILE=${OBJDIR}/disc1/bin/sh \
-		-R ${OBJDIR}/repo-config \
-		fetch -y -d -o ${TARGET_DIR}/${ABI_DIR}/${PKG_VERSION} -g ${BASENAME}-*
-	if [ $? -ne 0 ] ; then
-		exit_err "Failed copying base packages to ISO..."
-	fi
+	mkdir -p "${PKG_DISTDIR}"
 
-	rm ${OBJDIR}/disc1/root/auto-dist-install 2>/dev/null
+	BASE_PACKAGES="os/userland os/kernel"
+
+	# Install the base packages into ISODIR
+	for pkg in ${BASE_PACKAGES}
+	do
+		pkg-static -r ${ISODIR} -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh \
+			-R tmp/repo-config \
+			install -y ${pkg}
+		if [ $? -ne 0 ] ; then
+			exit_err "Failed installing base packages to ISO..."
+		fi
+
+	done
+
+	# Copy over the base system packages into the distdir
+	for pkg in ${BASE_PACKAGES}
+	do
+		pkg-static -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh \
+			-R tmp/repo-config \
+			fetch -y -d -o ${PKG_DISTDIR} ${pkg}
+		if [ $? -ne 0 ] ; then
+			exit_err "Failed copying base packages to ISO..."
+		fi
+	done
+
+	rm tmp/disc1/root/auto-dist-install 2>/dev/null
 
 	# Check if we have dist-packages to include on the ISO
 	local _missingpkgs=""
@@ -491,17 +517,17 @@ cp_iso_pkgs()
 				if [ -z "${i}" ] ; then continue; fi
 				if [ "${ptype}" = "prune-dist-packages" ] ; then
 					echo "Scanning for packages to prune: ${i}"
-					for prune in `ls ${OBJDIR}/${TARGET_DIR}/${ABI_DIR}/${PKG_VERSION}/All | grep -E "${i}"`
+					for prune in `ls ${PKG_DISTDIR} | grep -E "${i}"`
 					do
 						echo "Pruning image dist-file: $prune"
-						rm "${OBJDIR}/${TARGET_DIR}/${ABI_DIR}/${PKG_VERSION}/All/${prune}"
+						rm "${PKG_DISTDIR}/${prune}"
 					done
 					
 				else
 					echo "Fetching image dist-files for: $i"
-					pkg-static -o ABI_FILE=${OBJDIR}/disc1/bin/sh \
-						-R ${OBJDIR}/repo-config \
-						fetch -y -d -o ${TARGET_DIR}/${ABI_DIR}/${PKG_VERSION} $i
+					pkg-static -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh \
+						-R tmp/repo-config \
+						fetch -y -d -o ${PKG_DISTDIR} $i
 					if [ $? -ne 0 ] ; then
 						if [ "${ptype}" = "optional-dist-packages" ] ; then
 							echo "WARNING: Optional dist package missing: $i"
@@ -515,7 +541,7 @@ cp_iso_pkgs()
 			if [ "$ptype" = "auto-install-packages" ] ; then
 				echo "Saving package list to auto-install from: $c"
 				jq -r '."iso"."auto-install-packages"."'$c'" | join(" ")' ${TRUEOS_MANIFEST} \
-				>>${OBJDIR}/disc1/root/auto-dist-install
+				>>${ISODIR}/root/auto-dist-install
 			fi
 		done
 	done
@@ -524,13 +550,13 @@ cp_iso_pkgs()
 	fi
 	# Create the repo DB
 	echo "Creating installer pkg repo"
-	pkg-static repo ${TARGET_DIR}/${ABI_DIR}/${PKG_VERSION} ${PKGSIGNKEY}
+	pkg-static repo ${PKG_DISTDIR} ${PKGSIGNKEY}
 }
 
 create_offline_update()
 {
 	echo "Creating system-update.img..."
-	makefs ${OBJDIR}/system-update.img ${TARGET_DIR}/${ABI_DIR}/${PKG_VERSION}
+	makefs tmp/system-update.img ${PKG_DISTDIR}
 	if [ $? -ne 0 ] ; then
 		exit_err "Failed creating system-update.img"
 	fi
@@ -542,42 +568,28 @@ setup_iso_post() {
 	if [ "$(jq -r '."iso"."post-install-commands" | length' ${TRUEOS_MANIFEST})" != "0" ] ; then
 		echo "Saving post-install commands"
 		jq -r '."iso"."post-install-commands"' ${TRUEOS_MANIFEST} \
-			 >${OBJDIR}/disc1/root/post-install-commands.json
+			 >${ISODIR}/root/post-install-commands.json
 	fi
 
 	# Create the install repo DB config
-	mkdir -p ${OBJDIR}/disc1/etc/pkg
-	cat >${OBJDIR}/disc1/etc/pkg/TrueOS.conf <<EOF
+	mkdir -p ${ISODIR}/etc/pkg
+	cat >${ISODIR}/etc/pkg/TrueOS.conf <<EOF
 install-repo: {
   url: "file:///install-pkg",
   signature_type: "none",
   enabled: yes
 }
 EOF
-	mkdir -p ${OBJDIR}/disc1/install-pkg
-	mount_nullfs ${PKG_DIR} ${OBJDIR}/disc1/install-pkg
+	mkdir -p ${ISODIR}/install-pkg
+	mount_nullfs ${POUDRIERE_PKGDIR} ${ISODIR}/install-pkg
 	if [ $? -ne 0 ] ; then
-		exit_err "Failed mounting nullfs to disc1/install-pkg"
+		exit_err "Failed mounting nullfs to ${ISODIR}/install-pkg"
 	fi
 
 	# Prep the new ISO environment
-	chroot ${OBJDIR}/disc1 pwd_mkdb /etc/master.passwd
-	chroot ${OBJDIR}/disc1 cap_mkdb /etc/login.conf
-	touch ${OBJDIR}/disc1/etc/fstab
-
-	# Check for explict pkgs to install, minus development, debug, and profile
-	echo "Installing base packages into ISO:"
-	for e in os/userland os/kernel
-	do
-		pkg-static -o ABI_FILE=/bin/sh \
-			-R /etc/pkg \
-			-c ${OBJDIR}/disc1 \
-			install -y $e
-			if [ $? -ne 0 ] ; then
-				exit_err "Failed installing package $i to ISO..."
-			fi
-
-	done
+	chroot ${ISODIR} pwd_mkdb /etc/master.passwd
+	chroot ${ISODIR} cap_mkdb /etc/login.conf
+	touch ${ISODIR}/etc/fstab
 
 	# Check for conditionals packages to install
 	for c in $(jq -r '."iso"."iso-packages" | keys[]' ${TRUEOS_MANIFEST} 2>/dev/null | tr -s '\n' ' ')
@@ -588,9 +600,9 @@ EOF
 		# We have a conditional set of packages to include, lets do it
 		for i in $(jq -r '."iso"."iso-packages"."'$c'" | join(" ")' ${TRUEOS_MANIFEST})
 		do
-			pkg-static -o ABI_FILE=/bin/sh \
+			pkg-static -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh \
 				-R /etc/pkg \
-				-c ${OBJDIR}/disc1 \
+				-c ${ISODIR} \
 				install -y $i
 				if [ $? -ne 0 ] ; then
 					exit_err "Failed installing package $i to ISO..."
@@ -599,14 +611,15 @@ EOF
 	done
 
 	# Cleanup the ISO install packages
-	umount -f ${OBJDIR}/disc1/install-pkg
-	rmdir ${OBJDIR}/disc1/install-pkg
-	rm ${OBJDIR}/disc1/etc/pkg/TrueOS.conf
+	umount -f ${ISODIR}/install-pkg
+	rmdir ${ISODIR}/install-pkg
+	rm ${ISODIR}/etc/pkg/TrueOS.conf
 
 	# Create the local repo DB config
-	cat >${OBJDIR}/disc1/etc/pkg/TrueOS.conf <<EOF
+	LDIST=$(echo $PKG_DISTDIR | sed "s|$ISODIR||g")
+	cat >${ISODIR}/etc/pkg/TrueOS.conf <<EOF
 install-repo: {
-  url: "file:///dist/${ABI_DIR}/latest",
+  url: "file:///${LDIST}
   signature_type: "none",
   enabled: yes
 }
@@ -628,7 +641,7 @@ prune_iso()
 		for i in $(jq -r '."iso"."prune"."'$c'" | join(" ")' ${TRUEOS_MANIFEST})
 		do
 			echo "Pruning from ISO: ${i}"
-			rm -rf "${OBJDIR}/disc1/${i}"
+			rm -rf "${ISODIR}/${i}"
 		done
 	done
 }
@@ -641,7 +654,7 @@ apply_iso_config()
 	if [ "$_jsins" != "null" -a -n "$_jsins" ] ; then
 		echo "Setting custom install script"
 		jq -r '."iso"."install-script"' ${TRUEOS_MANIFEST} \
-			 >${OBJDIR}/disc1/etc/trueos-custom-install
+			 >${ISODIR}/etc/trueos-custom-install
 	fi
 
 	# Check for auto-install script
@@ -649,7 +662,7 @@ apply_iso_config()
 	if [ "$_jsauto" != "null" -a -n "$_jsauto" ] ; then
 		echo "Setting auto install script"
 		cp $(jq -r '."iso"."auto-install-script"' ${TRUEOS_MANIFEST}) \
-			 ${OBJDIR}/disc1/etc/installerconfig
+			 ${ISODIR}/etc/installerconfig
 	fi
 
 }

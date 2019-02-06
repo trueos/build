@@ -395,6 +395,7 @@
         "www_nginx_SET+=HTTP_UPLOAD_PROGRESS",
         "www_nginx_SET+=SPDY",
         "www_nginx_SET+=STATUS",
+        "www_node_UNSET+=DTRACE",
         "x11-toolkits_cairo_UNSET+=X11"
       ]
     },
