@@ -62,8 +62,7 @@ parse_overlay()
 	fi
 }
 
-scriptdir=$(dirname $(realpath $0))
-. ${scriptdir}/../../tools/boot/install-boot.sh
+. scripts/install-boot.sh
 
 if [ -z $ETDUMP ]; then
 	ETDUMP=etdump
@@ -112,8 +111,8 @@ NAME="$1"; shift
 
 publisher="TrueOS -  https://www.TrueOS.org/"
 echo "/dev/iso9660/$LABEL / cd9660 ro 0 0" > "$BASEBITSDIR/etc/fstab"
+sync
 $MAKEFS -t cd9660 $bootable -o rockridge -o label="$LABEL" -o publisher="$publisher" "$NAME" "$@" $OVERLAY_DIR
-rm -f "$BASEBITSDIR/etc/fstab"
 rm -f ${espfilename}
 
 if [ "$bootable" != "" ]; then
@@ -142,10 +141,6 @@ if [ "$bootable" != "" ]; then
 	rm -f hybrid.img
 fi
 
-if [ -d "${SRCDIR}/.git" ] ; then
-  #Source tree is a git checkout: Get the git hash/tag
-  GITHASH=$(git -C ${SRCDIR} log -1 --pretty=format:%h)
-fi
 if [ -z "${TRUEOS_VERSION}" ] ; then
   TRUEOS_VERSION=$(jq -r '."os_version"' $TRUEOS_MANIFEST)
 fi

@@ -453,7 +453,7 @@ mk_repo_config()
 base: {
   url: "file://${POUDRIERE_PKGDIR}",
   signature_type: "none",
-  enabled: yes
+  enabled: yes,
 }
 EOF
 
@@ -477,15 +477,15 @@ cp_iso_pkgs()
 
 	mkdir -p "${PKG_DISTDIR}"
 
-	BASE_PACKAGES="userland kernel"
+	BASE_PACKAGES="userland kernel pkg jq"
 
 	# Install the base packages into ISODIR
 	for pkg in ${BASE_PACKAGES}
 	do
-		pkgFile=$(ls ${POUDRIERE_PKGDIR}/${pkg}-[0-9]*.txz)
+		pkgFile=$(ls ${POUDRIERE_PKGDIR}/All/${pkg}-[0-9]*.txz)
 		pkg-static -r ${ISODIR} -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh \
 			-R tmp/repo-config \
-			add -y ${pkgFile}
+			add ${pkgFile}
 		if [ $? -ne 0 ] ; then
 			exit_err "Failed installing base packages to ISO..."
 		fi
@@ -593,6 +593,10 @@ EOF
 	chroot ${ISODIR} cap_mkdb /etc/login.conf
 	touch ${ISODIR}/etc/fstab
 
+	cp iso-files/rc ${ISODIR}/etc/
+	cp iso-files/rc.local ${ISODIR}/etc/
+	cp ${TRUEOS_MANIFEST} ${ISODIR}/root/trueos-manifest.json
+
 	# Check for conditionals packages to install
 	for c in $(jq -r '."iso"."iso-packages" | keys[]' ${TRUEOS_MANIFEST} 2>/dev/null | tr -s '\n' ' ')
 	do
@@ -671,7 +675,7 @@ apply_iso_config()
 
 mk_iso_file()
 {
-	sh scripts/mkisoimages.sh -b INSTALLER install.iso tmp/iso || exit 1
+	sh scripts/mkisoimages.sh -b INSTALLER install.iso tmp/iso || exit_err "Unable to create ISO"
 }
 
 check_version()
