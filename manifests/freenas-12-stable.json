@@ -209,6 +209,10 @@
             "name":"freenas-boot"
     },
     "os_name": "FreeNAS",
+    "poudriere": {
+        "jailname": "freenas",
+        "portsname": "freenas"
+    },
     "post-install-commands": [
       {
         "chroot":true,

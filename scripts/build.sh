@@ -29,6 +29,30 @@
 
 export PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
 
+exit_err()
+{
+	echo "ERROR: $1"
+	if [ -n "$2" ] ; then
+		exit $2
+	else
+		exit 1
+	fi
+}
+
+
+if [ -z "$TRUEOS_MANIFEST" ] ; then
+	exit_err "Unset TRUEOS_MANIFEST"
+fi
+
+CHECK=$(jq -r '."poudriere"."jailname"' $TRUEOS_MANIFEST)
+if [ -n "$CHECK" -a "$CHECK" != "null" ] ; then
+	POUDRIERE_BASE="$CHECK"
+fi
+CHECK=$(jq -r '."poudriere"."portsname"' $TRUEOS_MANIFEST)
+if [ -n "$CHECK" -a "$CHECK" != "null" ] ; then
+	POUDRIERE_PORTS="$CHECK"
+fi
+
 # Set our important defaults
 POUDRIERE_BASEFS=${POUDRIERE_BASEFS:-/usr/local/poudriere}
 POUDRIERE_BASE=${POUDRIERE_BASE:-trueos-mk-base}
@@ -43,23 +67,10 @@ POUDRIERED_DIR=/usr/local/etc/poudriere.d
 
 # Temp location for ISO files
 ISODIR="tmp/iso"
-
-exit_err()
-{
-	echo "ERROR: $1"
-	if [ -n "$2" ] ; then
-		exit $2
-	else
-		exit 1
-	fi
-}
-
 # Validate that we have a good TRUEOS_MANIFEST and sane build environment
+
 env_check()
 {
-	if [ -z "$TRUEOS_MANIFEST" ] ; then
-		exit_err "Unset TRUEOS_MANIFEST"
-	fi
 	echo "Using TRUEOS_MANIFEST: $TRUEOS_MANIFEST" >&2
 	PORTS_TYPE=$(jq -r '."ports"."type"' $TRUEOS_MANIFEST)
 	PORTS_URL=$(jq -r '."ports"."url"' $TRUEOS_MANIFEST)

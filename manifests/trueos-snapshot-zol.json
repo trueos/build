@@ -1,22 +1,5 @@
 {
   "base-packages": {
-    "depends": {
-      "runtime": {
-        "uclcmd": {
-          "origin": "devel/uclcmd",
-          "version": ">0"
-        },
-        "sysup": {
-          "origin": "sysutils/sysup",
-          "version": ">0"
-        },
-	"zol": {
-	  "origin": "sysutils/zol",
-	  "version": ">0"
-	}
-      }
-    },
-    "name-prefix": "TrueOS",
     "world-flags": {
       "default": [
         "WITHOUT_ZFS=YES",
@@ -39,7 +22,8 @@
         "sysutils/dmidecode",
         "sysutils/tmux",
         "www/nginx",
-        "security/ca_root_nss"
+        "security/ca_root_nss",
+        "sysutils/sysup"
       ]
     },
     "auto-install-script": "",
@@ -135,5 +119,5 @@
     "type": "git",
     "url": "https://github.com/trueos/trueos-ports"
   },
-  "version": "1.0"
+  "version": "1.1"
 }
