@@ -125,6 +125,9 @@ setup_poudriere_conf()
 
 	# Need config for the ports tree also
 	cp ${_pdconf} ${_pdconf2}
+
+	# Create our symlink to PKGDIR
+	ln -fs ${POUDRIERE_PKGDIR} release/packages
 }
 
 setup_poudriere_ports()
@@ -762,13 +765,16 @@ get_kernel_flags()
 	echo "$KF"
 }
 
-if [ ! -d 'tmp' ] ; then
-	mkdir tmp
-	if [ $? -ne 0 ] ; then
-		echo "Error creating tmp"
-		exit 1
+for d in tmp release
+do
+	if [ ! -d "${d}" ] ; then
+		mkdir ${d}
+		if [ $? -ne 0 ] ; then
+			echo "Error creating ${d}"
+			exit 1
+		fi
 	fi
-fi
+done
 
 if [ "$(id -u )" != "0" ] ; then
 	echo "Must be run as root!"
