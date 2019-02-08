@@ -505,7 +505,7 @@ clean_iso_dir()
 
 create_iso_dir()
 {
-	ABI=$(pkg-static -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh config)
+	ABI=$(pkg-static -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh config ABI)
 	PKG_DISTDIR="${ISODIR}/dist/${ABI}/latest"
 	clean_iso_dir
 
@@ -647,6 +647,7 @@ EOF
 	cp iso-files/rc ${ISODIR}/etc/
 	cp iso-files/rc.install ${ISODIR}/etc/
 	cp ${TRUEOS_MANIFEST} ${ISODIR}/root/trueos-manifest.json
+	cp ${TRUEOS_MANIFEST} ${ISODIR}/var/db/trueos-manifest.json
 
 	# Cleanup default runlevels
 	rm ${ISODIR}/etc/runlevels/boot/*
