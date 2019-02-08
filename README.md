@@ -19,5 +19,3 @@ License
 ----
 
 BSD 2 Clause
-
-**Free Software, Hell Yeah!**
