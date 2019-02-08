@@ -108,7 +108,7 @@ env_check()
 
 setup_poudriere_conf()
 {
-	echo "Setting up poudriere configuration"
+	echo "Creating poudriere configuration"
 	ZPOOL=$(mount | grep 'on / ' | cut -d '/' -f 1)
 	_pdconf="${POUDRIERED_DIR}/${POUDRIERE_BASE}-poudriere.conf"
 	_pdconf2="${POUDRIERED_DIR}/${POUDRIERE_PORTS}-poudriere.conf"
@@ -166,11 +166,10 @@ create_release_links()
 # Called to import the ports tree into poudriere specified in MANIFEST
 setup_poudriere_ports()
 {
-	echo "Creating poudriere ports tree" 
-
 	# Delete previous ports tree
 	poudriere ports -l | grep -q -w ${POUDRIERE_PORTS}
 	if [ $? -eq 0 ]; then
+		echo "Removing previous poudriere ports tree"
 		echo -e "y\n" | poudriere ports -d -p ${POUDRIERE_PORTS}
 	fi
 
@@ -179,7 +178,7 @@ setup_poudriere_ports()
 	#chmod -R 777 ${JDIR}/var/tmp
 
 	# Create the new ports tree
-	echo "Setting up poudriere ports"
+	echo "Creating poudriere ports tree"
 	if [ "$PORTS_TYPE" = "git" ] ; then
 		poudriere ports -c -p $POUDRIERE_PORTS -m git -U "${PORTS_URL}" -B $PORTS_BRANCH
 		if [ $? -ne 0 ] ; then
