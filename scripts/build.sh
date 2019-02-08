@@ -43,10 +43,11 @@ exit_err()
 if [ -z "$TRUEOS_MANIFEST" ] ; then
 	if [ -e ".config/manifest" ] ; then
 		export TRUEOS_MANIFEST="$(pwd)/manifests/$(cat .config/manifest)"
-	elif [ -d "$(pwd)/manifests/trueos-snapshot.json" ] ; then
+	elif [ -e "$(pwd)/manifests/trueos-snapshot.json" ] ; then
 		export TRUEOS_MANIFEST="$(pwd)/manifests/trueos-snapshot.json"
 	fi
 fi
+
 
 if [ -z "$TRUEOS_MANIFEST" ] ; then
 	exit_err "Unset TRUEOS_MANIFEST"

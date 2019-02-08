@@ -1,0 +1,75 @@
+/*
+
+Our default Jenkins pipeline we use to create our on-commit
+snapshot builds of trueos-master branch.
+
+*/
+
+pipeline {
+  agent { label 'TrueOS-Snapshot' }
+
+  environment {
+    GH_ORG = 'trueos'
+    GH_REPO = 'trueos'
+    POUDRIERE_BASE = 'trueos-snap-base'
+    POUDRIERE_PORTS = 'trueos-snap-ports'
+    TRUEOS_MANIFEST='${WORKSPACE}/manifests/trueos-snapshot.json'
+    TRUEOS_VERSION = '13.0'
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+    stage('Build') {
+      post {
+        always {
+          archiveArtifacts artifacts: 'release/**', fingerprint: true
+        }
+      }
+      environment {
+           PKGSIGNKEY = credentials('a50f9ddd-1460-4951-a304-ddbf6f2f7990')
+      }
+      steps {
+        sh 'make ports'
+      }
+    }
+    stage('ISO') {
+      post {
+        always {
+          archiveArtifacts artifacts: 'release/**', fingerprint: true
+        }
+      }
+      environment {
+         PKGSIGNKEY = credentials('a50f9ddd-1460-4951-a304-ddbf6f2f7990')
+      }
+      steps {
+        sh 'make iso'
+      }
+    }
+    stage('Publish') {
+      steps {
+        sshagent (credentials: ['syncbot-credentials']) {
+          sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null syncbot@pkg.trueos.org mkdir -p /data/pkg/snapshot/FreeBSD:13:amd64/latest || true'
+          sh 'rsync -av --delete-after --delay-updates -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" release/packages/latest syncbot@pkg.trueos.org:/data/pkg/snapshot/FreeBSD:13:amd64/latest'
+          sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null syncbot@pkg.trueos.org mkdir -p /data/iso/snapshot/ || true'
+          sh 'rsync -av --delete-after --delay-updates -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" release/*.iso* syncbot@pkg.trueos.org:/data/iso/snapshot/'
+        }
+      }
+    }
+    stage('Clean') {
+      steps {
+        sh 'make clean'
+      }
+    }
+  }
+  post {
+    success {
+      script {
+        cleanWs notFailBuild: true
+      }
+    }
+  }
+}

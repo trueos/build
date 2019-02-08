@@ -26,7 +26,7 @@
     "dist-packages": {
       "default": []
     },
-    "file-name": "TrueOS-Snapshot-x64-%%GITHASH%%-%%DATE%%",
+    "file-name": "TrueOS-Snapshot-x64-%%DATE%%",
     "install-script": "",
     "iso-packages": {
       "default": [
@@ -92,7 +92,6 @@
         "lang/python3",
         "net/rsync",
         "ports-mgmt/poudriere-trueos",
-        "ports-mgmt/poudriere-devel",
         "editors/vim-console"
       ]
     },
