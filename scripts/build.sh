@@ -29,6 +29,7 @@
 
 export PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
 
+# Set our important defaults
 POUDRIERE_BASEFS=${POUDRIERE_BASEFS:-/usr/local/poudriere}
 POUDRIERE_BASE=${POUDRIERE_BASE:-trueos-mk-base}
 POUDRIERE_PORTS=${POUDRIERE_PORTS:-trueos-mk-ports}
@@ -37,8 +38,10 @@ PKG_CMD=${PKG_CMD:-pkg-static}
 POUDRIERE_JAILDIR="${POUDRIERE_BASEFS}/jails/${POUDRIERE_BASE}"
 POUDRIERE_PORTDIR="${POUDRIERE_BASEFS}/ports/${POUDRIERE_PORTS}"
 POUDRIERE_PKGDIR="${POUDRIERE_BASEFS}/data/packages/${POUDRIERE_BASE}-${POUDRIERE_PORTS}"
+POUDRIERE_LOGDIR="${POUDRIERE_BASEFS}/data/logs"
 POUDRIERED_DIR=/usr/local/etc/poudriere.d
 
+# Temp location for ISO files
 ISODIR="tmp/iso"
 
 exit_err()
@@ -51,6 +54,7 @@ exit_err()
 	fi
 }
 
+# Validate that we have a good TRUEOS_MANIFEST and sane build environment
 env_check()
 {
 	if [ -z "$TRUEOS_MANIFEST" ] ; then
@@ -126,10 +130,21 @@ setup_poudriere_conf()
 	# Need config for the ports tree also
 	cp ${_pdconf} ${_pdconf2}
 
-	# Create our symlink to PKGDIR
-	ln -fs ${POUDRIERE_PKGDIR} release/packages
 }
 
+# We don't need to store poudriere data in our checked out location
+# This is to ensure we can use poudriere testport and other commands
+# directly in development
+#
+# Instead lets create some symlinks to important output directories
+create_release_links()
+{
+	ln -fs ${POUDRIERE_PKGDIR} release/packages
+	ln -fs ${POUDRIERE_LOGDIR}/base-ports release/src-logs
+	ln -fs ${POUDRIERE_LOGDIR}/bulk/${POUDRIERE_BASE}-${POUDRIERE_PORTS} release/port-logs
+}
+
+# Called to import the ports tree into poudriere specified in MANIFEST
 setup_poudriere_ports()
 {
 	echo "Creating poudriere ports tree" 
@@ -218,6 +233,7 @@ setup_poudriere_ports()
 
 }
 
+# Checks if we have a new base ports jail to build, if so we will rebuild it
 setup_poudriere_jail()
 {
 	poudriere jail -l | grep -q -w "${POUDRIERE_BASE}"
@@ -246,6 +262,7 @@ setup_poudriere_jail()
 	fi
 }
 
+# Scrape the MANIFEST for list of packages to build
 get_pkg_build_list()
 {
 	# Check for any conditional packages to build in ports
@@ -282,13 +299,9 @@ get_pkg_build_list()
 	mv ${1}.new ${1}
 }
 
+# Start the poudriere build jobs
 build_poudriere()
 {
-
-	# Save the FreeBSD ABI Version
-	if [ ! -d "${POUDRIERE_PKGDIR}" ] ; then
-		mkdir -p ${POUDRIERE_PKGDIR}
-	fi
 
 	# Check if we want to do a bulk build of everything
 	if [ $(jq -r '."ports"."build-all"' ${TRUEOS_MANIFEST}) = "true" ] ; then
@@ -358,6 +371,7 @@ super_clean_poudriere()
 	done
 }
 
+# If we did a bulk -a of poudriere, ensure we have everything mentioned in the MANIFEST
 check_essential_pkgs()
 {
 	echo "Checking essential-packages..."
@@ -471,7 +485,7 @@ clean_iso_dir()
 	rm -rf ${ISODIR}
 }
 
-cp_iso_pkgs()
+create_iso_dir()
 {
 	ABI=$(pkg-static -r ${ISODIR} -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh)
 	PKG_DISTDIR="${ISODIR}/dist/${ABI}/latest"
@@ -788,10 +802,11 @@ case $1 in
 	       exit 0
 	       ;;
 	poudriere) env_check
+		   create_release_links
 		   run_poudriere
 		   ;;
 	iso) env_check
-             cp_iso_pkgs
+             create_iso_dir
 	     if [ "$(jq -r '."iso"."offline-update"' ${TRUEOS_MANIFEST})" = "true" ] ; then
 		     create_offline_update
 	     fi
