@@ -682,13 +682,13 @@ EOF
 	# Cleanup the ISO install packages
 	umount -f ${ISODIR}/install-pkg
 	rmdir ${ISODIR}/install-pkg
-	rm ${ISODIR}/etc/pkg/TrueOS.conf
+	rm ${ISODIR}/etc/pkg/*
 
 	# Create the local repo DB config
 	LDIST=$(echo $PKG_DISTDIR | sed "s|$ISODIR||g")
 	cat >${ISODIR}/etc/pkg/TrueOS.conf <<EOF
 install-repo: {
-  url: "file:///${LDIST}
+  url: "file://${LDIST}"
   signature_type: "none",
   enabled: yes
 }
