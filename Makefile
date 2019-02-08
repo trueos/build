@@ -6,6 +6,8 @@ all: ports iso
 
 clean:
 	@sh scripts/build.sh clean
+config:
+	@sh scripts/build.sh config
 ports:
 	@sh scripts/build.sh poudriere
 iso:

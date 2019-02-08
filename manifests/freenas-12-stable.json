@@ -198,7 +198,7 @@
 	"/usr/lib32"
       ]
     },
-    "file-name": "FreeNAS-12-unstable-x64-%%GITHASH%%-%%DATE%%",
+    "file-name": "FreeNAS-12-unstable-x64-%%DATE%%",
     "install-script": "",
     "iso-packages": {
       "default": [ ]

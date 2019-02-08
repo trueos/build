@@ -41,6 +41,14 @@ exit_err()
 
 
 if [ -z "$TRUEOS_MANIFEST" ] ; then
+	if [ -e ".config/manifest" ] ; then
+		export TRUEOS_MANIFEST="$(pwd)/manifests/$(cat .config/manifest)"
+	elif [ -d "$(pwd)/manifests/trueos-snapshot.json" ] ; then
+		export TRUEOS_MANIFEST="$(pwd)/manifests/trueos-snapshot.json"
+	fi
+fi
+
+if [ -z "$TRUEOS_MANIFEST" ] ; then
 	exit_err "Unset TRUEOS_MANIFEST"
 fi
 
@@ -498,7 +506,7 @@ clean_iso_dir()
 
 create_iso_dir()
 {
-	ABI=$(pkg-static -r ${ISODIR} -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh)
+	ABI=$(pkg-static -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh config)
 	PKG_DISTDIR="${ISODIR}/dist/${ABI}/latest"
 	clean_iso_dir
 
@@ -601,11 +609,11 @@ create_offline_update()
 		DATE="$(date +%Y%m%d)"
 		FILE_RENAME=$(echo $FILE_RENAME | sed "s|%%DATE%%|$DATE|g" | sed "s|%%TRUEOS_VERSION%%|$TRUEOS_VERSION|g")
 		echo "Renaming ${NAME} -> ${FILE_RENAME}.img"
-		mv release/${NAME} ${FILE_RENAME}.img
+		mv release/${NAME} release/${FILE_RENAME}.img
 		NAME="${FILE_RENAME}.img"
 	fi
-	sha256 -q ${NAME} > ${NAME}.sha256
-	md5 -q ${NAME} > ${NAME}.md5
+	sha256 -q release/${NAME} > release/${NAME}.sha256
+	md5 -q release/${NAME} > release/${NAME}.md5
 }
 
 setup_iso_post() {
@@ -790,6 +798,39 @@ get_kernel_flags()
 	echo "$KF"
 }
 
+select_manifest()
+{
+	# TODO - Replace this with "dialog" time permitting
+	echo "Please select a default MANIFEST:"
+	COUNT=0
+	for i in $(ls manifests/)
+	do
+		echo "$COUNT) $i"
+		COUNT=$(expr $COUNT + 1)
+	done
+	echo -e ">\c"
+	read tmp
+	expr $tmp + 1 >/dev/null 2>/dev/null
+	if [ $? -ne 0 ] ; then
+		exit_err "Invalid option!"
+	fi
+	COUNT=0
+	for i in $(ls manifests/)
+	do
+		if [ $COUNT -eq $tmp ] ; then
+			MANIFEST=$i
+		fi
+		COUNT=$(expr $COUNT + 1)
+	done
+	if [ -z "$MANIFEST" ] ; then
+		exit_err "Invalid option!"
+	fi
+	if [ ! -d ".config" ] ; then
+		mkdir .config
+	fi
+	echo "$MANIFEST" > .config/manifest
+}
+
 for d in tmp release
 do
 	if [ ! -d "${d}" ] ; then
@@ -828,6 +869,8 @@ case $1 in
 	check)  env_check
 		check_build_environment
 		check_version ;;
+	config) select_manifest 
+		;;
 	*) echo "Unknown option selected" ;;
 esac
 
