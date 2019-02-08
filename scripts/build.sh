@@ -147,7 +147,7 @@ setup_poudriere_conf()
 	fi
 
 	# Need config for the ports tree also
-	cp ${_pdconf} ${_pdconf2}
+	cp ${_pdconf} ${_pdconf2} 2>/dev/null
 
 }
 
@@ -240,7 +240,7 @@ setup_poudriere_ports()
 	fi
 
 
-	rm ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
+	rm ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf 2>/dev/null 2>/dev/null
 	for c in $(jq -r '."ports"."make.conf" | keys[]' ${TRUEOS_MANIFEST} 2>/dev/null | tr -s '\n' ' ')
 	do
 		eval "CHECK=\$$c"

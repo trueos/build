@@ -6,6 +6,10 @@
       ]
     }
   },
+  "poudriere": {
+      "jailname": "freenas",
+      "portsname": "freenas"
+  },
   "iso": {
     "auto-install-packages": {
       "default": [
@@ -209,10 +213,6 @@
             "name":"freenas-boot"
     },
     "os_name": "FreeNAS",
-    "poudriere": {
-        "jailname": "freenas",
-        "portsname": "freenas"
-    },
     "post-install-commands": [
       {
         "chroot":true,
