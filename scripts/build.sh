@@ -40,7 +40,6 @@ POUDRIERE_PKGDIR="${POUDRIERE_BASEFS}/data/packages/${POUDRIERE_BASE}-${POUDRIER
 POUDRIERED_DIR=/usr/local/etc/poudriere.d
 
 ISODIR="tmp/iso"
-PKG_DISTDIR="${ISODIR}/dist/packages"
 
 exit_err()
 {
@@ -471,6 +470,8 @@ clean_iso_dir()
 
 cp_iso_pkgs()
 {
+	ABI=$(pkg-static -r ${ISODIR} -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh)
+	PKG_DISTDIR="${ISODIR}/dist/${ABI}/latest"
 	clean_iso_dir
 
 	mk_repo_config
@@ -594,8 +595,20 @@ EOF
 	touch ${ISODIR}/etc/fstab
 
 	cp iso-files/rc ${ISODIR}/etc/
-	cp iso-files/rc.local ${ISODIR}/etc/
+	cp iso-files/rc.install ${ISODIR}/etc/
 	cp ${TRUEOS_MANIFEST} ${ISODIR}/root/trueos-manifest.json
+
+	# Cleanup default runlevels
+	rm ${ISODIR}/etc/runlevels/boot/*
+	rm ${ISODIR}/etc/runlevels/default/*
+	for i in abi ldconfig localmount
+	do
+		ln -fs /etc/init.d/${i} ${ISODIR}/etc/runlevels/boot/${i}
+	done
+	for i in local
+	do
+		ln -fs /etc/init.d/${i} ${ISODIR}/etc/runlevels/default/${i}
+	done
 
 	# Check for conditionals packages to install
 	for c in $(jq -r '."iso"."iso-packages" | keys[]' ${TRUEOS_MANIFEST} 2>/dev/null | tr -s '\n' ' ')

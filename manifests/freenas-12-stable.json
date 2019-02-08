@@ -208,6 +208,7 @@
         "pool": {
             "name":"freenas-boot"
     },
+    "os_name", "FreeNAS",
     "post-install-commands": [
       {
         "chroot":true,

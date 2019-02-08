@@ -57,6 +57,9 @@ fi
 # Sleep a tick first, which prevents from odd services from crashing
 sleep 1
 
+# Start the installation
+sh /etc/rc.install
+
 # We don't actually care if rc default worked or not, we should exit 0
 # to allow logins
 exit 0
