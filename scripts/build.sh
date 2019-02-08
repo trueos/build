@@ -132,7 +132,7 @@ setup_poudriere_conf()
 
 setup_poudriere_ports()
 {
-	echo "Setting up poudriere jail"
+	echo "Creating poudriere ports tree" 
 
 	# Delete previous ports tree
 	poudriere ports -l | grep -q -w ${POUDRIERE_PORTS}
@@ -188,7 +188,7 @@ setup_poudriere_ports()
 	fi
 
 	# Do we have any locally checked out sources to copy into poudirere jail?
-	LOCAL_SOURCE_DIR=$(jq -r '."ports"."local_source"' $TRUEOS_MANIFEST 2>/dev/null)
+	LOCAL_SOURCE_DIR=source
 	if [ -n "$LOCAL_SOURCE_DIR" -a -d "${LOCAL_SOURCE_DIR}" ] ; then
 		rm -rf ${POUDRIERE_PORTDIR}/local_source 2>/dev/null
 		cp -a ${LOCAL_SOURCE_DIR} ${POUDRIERE_PORTDIR}/local_source

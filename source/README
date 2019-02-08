@@ -1,0 +1,11 @@
+# Local Development Source Directory
+#
+# When building ports, sometimes you want to do rapid
+# development iteration without needing to bump ports each time
+#
+# You can checkout local sources into this directory, which
+# will in turn be copied into /usr/ports/local_source during
+# the "make ports" phase of building
+#
+# Example
+# git clone https://github.com/freenas/freenas
