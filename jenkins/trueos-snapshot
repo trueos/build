@@ -30,7 +30,7 @@ pipeline {
         }
       }
       environment {
-           PKGSIGNKEY = credentials('a50f9ddd-1460-4951-a304-ddbf6f2f7990')
+         PKG_REPO_SIGNING_KEY = credentials('a50f9ddd-1460-4951-a304-ddbf6f2f7990')
       }
       steps {
         sh 'make ports'
@@ -43,7 +43,7 @@ pipeline {
         }
       }
       environment {
-         PKGSIGNKEY = credentials('a50f9ddd-1460-4951-a304-ddbf6f2f7990')
+         PKG_REPO_SIGNING_KEY = credentials('a50f9ddd-1460-4951-a304-ddbf6f2f7990')
       }
       steps {
         sh 'make iso'
@@ -53,7 +53,7 @@ pipeline {
       steps {
         sshagent (credentials: ['syncbot-credentials']) {
           sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null syncbot@pkg.trueos.org mkdir -p /data/pkg/snapshot/FreeBSD:13:amd64/latest || true'
-          sh 'rsync -av --delete-after --delay-updates -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" release/packages/latest syncbot@pkg.trueos.org:/data/pkg/snapshot/FreeBSD:13:amd64/latest'
+          sh 'rsync -av --delete-after --delay-updates -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" release/packages syncbot@pkg.trueos.org:/data/pkg/snapshot/FreeBSD:13:amd64/latest'
           sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null syncbot@pkg.trueos.org mkdir -p /data/iso/snapshot/ || true'
           sh 'rsync -av --delete-after --delay-updates -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" release/*.iso* syncbot@pkg.trueos.org:/data/iso/snapshot/'
         }
