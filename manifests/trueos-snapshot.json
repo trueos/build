@@ -13,13 +13,17 @@
     "auto-install-packages": {
       "default": [
         "ports-mgmt/poudriere",
+	"os/userland",
+	"os/docs",
+	"os/kernel",
 	"security/sudo",
         "sysutils/ipmitool",
         "sysutils/dmidecode",
         "sysutils/tmux",
-        "www/nginx",
         "security/ca_root_nss",
-	"sysutils/sysup"
+	"sysutils/sysup",
+	"textproc/jq",
+        "www/nginx"
       ]
     },
     "auto-install-script": "",
@@ -92,6 +96,7 @@
         "lang/python3",
         "net/rsync",
         "ports-mgmt/poudriere-trueos",
+	"textproc/jq",
         "editors/vim-console"
       ]
     },
