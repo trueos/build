@@ -153,5 +153,5 @@ if [ -n "$FILE_RENAME" -a "$FILE_RENAME" != "null" ] ; then
   NAME="${FILE_RENAME}.iso"
 fi
 
-sha256 -q relealse/${NAME} > release/${NAME}.sha256
+sha256 -q release/${NAME} > release/${NAME}.sha256
 md5 -q release/${NAME} > release/${NAME}.md5
