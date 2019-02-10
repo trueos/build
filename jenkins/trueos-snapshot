@@ -25,7 +25,8 @@ pipeline {
     stage('Build') {
       post {
         always {
-          archiveArtifacts artifacts: 'release/**', fingerprint: true
+          archiveArtifacts artifacts: 'release/port-logs/**', fingerprint: true
+          archiveArtifacts artifacts: 'release/src-logs/**', fingerprint: true
         }
       }
       environment {
@@ -39,7 +40,7 @@ pipeline {
     stage('ISO') {
       post {
         always {
-          archiveArtifacts artifacts: 'release/**', fingerprint: true
+          archiveArtifacts artifacts: 'release/iso', fingerprint: true
         }
       }
       environment {
