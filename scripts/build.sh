@@ -864,13 +864,22 @@ select_manifest()
 }
 
 do_iso_create() {
-	create_iso_dir
-	if [ "$(jq -r '."iso"."offline-update"' ${TRUEOS_MANIFEST})" = "true" ] ; then
-		create_offline_update
+	if [ -d "release/iso-logs" ] ; then
+		rm -rf release/iso-logs
 	fi
-	setup_iso_post
-	apply_iso_config
-	mk_iso_file
+	mkdir -p release/iso-logs
+
+	echo "Creating ISO directory"
+	create_iso_dir >release/iso-logs/01_iso_dir.log 2>&1
+	if [ "$(jq -r '."iso"."offline-update"' ${TRUEOS_MANIFEST})" = "true" ] ; then
+		echo "Creating offline update"
+		create_offline_update >release/iso-logs/01_offline_update.log 2>&1
+	fi
+	echo "Preparing ISO directory"
+	setup_iso_post >release/iso-logs/02_iso_post.log 2>&1
+	apply_iso_config >release/iso-logs/03_iso_config.log 2>&1
+	echo "Packaging ISO file"
+	mk_iso_file >release/iso-logs/04_mk_iso_fil.log 2>&1
 }
 
 for d in tmp release
