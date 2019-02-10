@@ -863,6 +863,16 @@ select_manifest()
 	echo "$MANIFEST" > .config/manifest
 }
 
+do_iso_create() {
+	create_iso_dir
+	if [ "$(jq -r '."iso"."offline-update"' ${TRUEOS_MANIFEST})" = "true" ] ; then
+		create_offline_update
+	fi
+	setup_iso_post
+	apply_iso_config
+	mk_iso_file
+}
+
 for d in tmp release
 do
 	if [ ! -d "${d}" ] ; then
@@ -890,13 +900,7 @@ case $1 in
 		   run_poudriere
 		   ;;
 	iso) env_check
-             create_iso_dir
-	     if [ "$(jq -r '."iso"."offline-update"' ${TRUEOS_MANIFEST})" = "true" ] ; then
-		     create_offline_update
-	     fi
-	     setup_iso_post
-	     apply_iso_config
-	     mk_iso_file
+	     do_iso_create
 	     ;;
 	check)  env_check
 		check_build_environment
