@@ -132,12 +132,17 @@ setup_poudriere_conf()
 	echo "USE_TMPFS=data" >> ${_pdconf}
 	echo "BASEFS=$POUDRIERE_BASEFS" >> ${_pdconf}
 	echo "ATOMIC_PACKAGE_REPOSITORY=no" >> ${_pdconf}
-	echo "PKG_REPO_FROM_HOST=yes" >> ${_pdconf}
+	#echo "PKG_REPO_FROM_HOST=yes" >> ${_pdconf}
 	echo "ALLOW_MAKE_JOBS_PACKAGES=\"chromium* iridium* aws-sdk* gcc* webkit* llvm* clang* firefox* ruby* cmake* rust* qt5-web* phantomjs* swift* perl5* py*\"" >> ${_pdconf}
 	echo "PRIORITY_BOOST=\"pypy* openoffice* iridium* chromium* aws-sdk* libreoffice*\"" >> ${_pdconf}
 
 	if [ "$(jq -r '."poudriere-conf" | length' ${TRUEOS_MANIFEST})" != "0" ] ; then
 		jq -r '."poudriere-conf" | join("\n")' ${TRUEOS_MANIFEST} >> ${_pdconf}
+	fi
+
+	# Do we have a signing key to use?
+	if [ -n "${SIGNING_KEY}" ] ; then
+	       echo "PKG_REPO_SIGNING_KEY=${SIGNING_KEY}" >> ${_pdconf}
 	fi
 
 	# If there is a custom poudriere.conf.release file in /etc we will also
@@ -329,14 +334,6 @@ get_pkg_build_list()
 # Start the poudriere build jobs
 build_poudriere()
 {
-	if [ -n "${SIGNING_KEY}" ] ; then
-		export PKG_REPO_SIGNING_KEY="$(pwd)/tmp/repo.key"
-		cp ${SIGNING_KEY} ${PKG_REPO_SIGNING_KEY}
-		echo "Using PKG_REPO_SIGNING_KEY: ${PKG_REPO_SIGNING_KEY}"
-	else
-		echo "WARNING: Building without SIGNING_KEY!"
-	fi
-
 	# Check if we want to do a bulk build of everything
 	if [ $(jq -r '."ports"."build-all"' ${TRUEOS_MANIFEST}) = "true" ] ; then
 		# Start the build
@@ -604,7 +601,7 @@ create_iso_dir()
 	fi
 	# Create the repo DB
 	echo "Creating installer pkg repo"
-	pkg-static repo ${PKG_DISTDIR} ${PKG_REPO_SIGNING_KEY}
+	pkg-static repo ${PKG_DISTDIR} ${SIGNING_KEY}
 }
 
 create_offline_update()
