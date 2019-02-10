@@ -589,7 +589,7 @@ create_iso_dir()
 	fi
 	# Create the repo DB
 	echo "Creating installer pkg repo"
-	pkg-static repo ${PKG_DISTDIR} ${PKGSIGNKEY}
+	pkg-static repo ${PKG_DISTDIR} ${PKG_REPO_SIGNING_KEY}
 }
 
 create_offline_update()
@@ -740,6 +740,9 @@ apply_iso_config()
 
 mk_iso_file()
 {
+	if [ ! -d "release/iso" ] ; then
+		mkdir -p release/iso
+	fi
 	NAME="release/iso/install.iso"
 	sh scripts/mkisoimages.sh -b INSTALLER ${NAME} ${ISODIR} || exit_err "Unable to create ISO"
 
