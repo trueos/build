@@ -54,9 +54,9 @@ pipeline {
       steps {
         sshagent (credentials: ['syncbot-credentials']) {
           sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null syncbot@pkg.trueos.org mkdir -p /data/pkg/snapshot/FreeBSD:13:amd64/latest || true'
-          sh 'rsync -av --delete-after --delay-updates -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" release/packages syncbot@pkg.trueos.org:/data/pkg/snapshot/FreeBSD:13:amd64/latest'
+          sh 'cd release/packages && rsync -av --delete-after --delay-updates -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" . syncbot@pkg.trueos.org:/data/pkg/snapshot/FreeBSD:13:amd64/latest/'
           sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null syncbot@pkg.trueos.org mkdir -p /data/iso/snapshot/ || true'
-          sh 'rsync -av --delete-after --delay-updates -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" release/*.iso* syncbot@pkg.trueos.org:/data/iso/snapshot/'
+          sh 'rsync -av --delete-after --delay-updates -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" release/iso/ syncbot@pkg.trueos.org:/data/iso/snapshot/'
         }
       }
     }

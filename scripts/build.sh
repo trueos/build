@@ -596,7 +596,7 @@ create_offline_update()
 {
 	local NAME="system-update.img"
 	echo "Creating ${NAME}..."
-	makefs release/${NAME} ${PKG_DISTDIR}
+	makefs release/update/${NAME} ${PKG_DISTDIR}
 	if [ $? -ne 0 ] ; then
 		exit_err "Failed creating system-update.img"
 	fi
@@ -609,11 +609,11 @@ create_offline_update()
 		DATE="$(date +%Y%m%d)"
 		FILE_RENAME=$(echo $FILE_RENAME | sed "s|%%DATE%%|$DATE|g" | sed "s|%%TRUEOS_VERSION%%|$TRUEOS_VERSION|g")
 		echo "Renaming ${NAME} -> ${FILE_RENAME}.img"
-		mv release/${NAME} release/${FILE_RENAME}.img
+		mv release/update/${NAME} release/update/${FILE_RENAME}.img
 		NAME="${FILE_RENAME}.img"
 	fi
-	sha256 -q release/${NAME} > release/${NAME}.sha256
-	md5 -q release/${NAME} > release/${NAME}.md5
+	sha256 -q release/update/${NAME} > release/update/${NAME}.sha256
+	md5 -q release/update/${NAME} > release/update/${NAME}.md5
 }
 
 setup_iso_post() {
@@ -740,7 +740,20 @@ apply_iso_config()
 
 mk_iso_file()
 {
-	sh scripts/mkisoimages.sh -b INSTALLER release/install.iso tmp/iso || exit_err "Unable to create ISO"
+	NAME="release/iso/install.iso"
+	sh scripts/mkisoimages.sh -b INSTALLER ${NAME} ${ISODIR} || exit_err "Unable to create ISO"
+
+	TRUEOS_VERSION=$(jq -r '."os_version"' $TRUEOS_MANIFEST)
+	FILE_RENAME="$(jq -r '."iso"."file-name"' $TRUEOS_MANIFEST)"
+	if [ -n "$FILE_RENAME" -a "$FILE_RENAME" != "null" ] ; then
+		DATE="$(date +%Y%m%d)"
+		FILE_RENAME=$(echo $FILE_RENAME | sed "s|%%DATE%%|$DATE|g" | sed "s|%%TRUEOS_VERSION%%|$TRUEOS_VERSION|g")
+		echo "Renaming ${NAME} -> release/${FILE_RENAME}.iso"
+		mv ${NAME} release/iso/${FILE_RENAME}.iso
+		NAME="${FILE_RENAME}.iso"
+	fi
+	sha256 -q release/iso/${NAME} > release/iso/${NAME}.sha256
+	md5 -q release/iso/${NAME} > release/iso/${NAME}.md5
 }
 
 check_version()
