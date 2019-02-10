@@ -329,6 +329,12 @@ get_pkg_build_list()
 # Start the poudriere build jobs
 build_poudriere()
 {
+	if [ -n "$PKG_REPO_SIGNING_KEY" ] ; then
+		echo "Using PKG_REPO_SIGNING_KEY: ${PKG_REPO_SIGNING_KEY}"
+		export PKG_REPO_SIGNING_KEY
+	else
+		echo "WARNING: Building without PKG_REPO_SIGNING_KEY!"
+	fi
 
 	# Check if we want to do a bulk build of everything
 	if [ $(jq -r '."ports"."build-all"' ${TRUEOS_MANIFEST}) = "true" ] ; then
