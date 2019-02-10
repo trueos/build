@@ -276,6 +276,11 @@ setup_poudriere_jail()
 
 	echo "Rebuilding ${POUDRIERE_BASE} jail"
 
+	# Nuke packages if we need to rebuild jail
+	if [ -d "${POUDRIERE_PKGDIR}" ] ; then
+		rm -r ${POUDRIERE_PKGDIR}/*
+	fi
+
 	export KERNEL_MAKE_FLAGS="$(get_kernel_flags)"
 	export WORLD_MAKE_FLAGS="$(get_world_flags)"
 	poudriere jail -c -j $POUDRIERE_BASE -m ports=${POUDRIERE_PORTS} -v ${TRUEOS_VERSION}
