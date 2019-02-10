@@ -91,13 +91,14 @@
         "devel/git",
         "devel/jenkins",
         "dns/mDNSResponder_nss",
+        "editors/vim-console",
         "lang/python",
         "lang/python2",
         "lang/python3",
         "net/rsync",
         "ports-mgmt/poudriere-trueos",
-	"textproc/jq",
-        "editors/vim-console"
+	"sysutils/ec2-scripts",
+	"textproc/jq"
       ]
     },
     "build-all": false,
