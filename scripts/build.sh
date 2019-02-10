@@ -765,7 +765,7 @@ mk_iso_file()
 	if [ -n "$FILE_RENAME" -a "$FILE_RENAME" != "null" ] ; then
 		DATE="$(date +%Y%m%d)"
 		FILE_RENAME=$(echo $FILE_RENAME | sed "s|%%DATE%%|$DATE|g" | sed "s|%%TRUEOS_VERSION%%|$TRUEOS_VERSION|g")
-		echo "Renaming ${NAME} -> release/${FILE_RENAME}.iso"
+		echo "Renaming ${NAME} -> release/iso/${FILE_RENAME}.iso"
 		mv ${NAME} release/iso/${FILE_RENAME}.iso
 		NAME="${FILE_RENAME}.iso"
 	fi
