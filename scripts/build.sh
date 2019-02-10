@@ -159,8 +159,11 @@ setup_poudriere_conf()
 # Instead lets create some symlinks to important output directories
 create_release_links()
 {
+	rm release/packages >/dev/null 2>/dev/null
 	ln -fs ${POUDRIERE_PKGDIR} release/packages
+	rm release/src-logs >/dev/null 2>/dev/null
 	ln -fs ${POUDRIERE_LOGDIR}/base-ports release/src-logs
+	rm release/port-logs >/dev/null 2>/dev/null
 	ln -fs ${POUDRIERE_LOGDIR}/bulk/${POUDRIERE_BASE}-${POUDRIERE_PORTS} release/port-logs
 }
 
