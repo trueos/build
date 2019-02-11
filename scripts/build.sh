@@ -260,21 +260,59 @@ setup_poudriere_ports()
 
 }
 
+is_jail_dirty()
+{
+	poudriere jail -l | grep -q -w "${POUDRIERE_BASE}"
+	if [ $? -ne 0 ] ; then
+		return 1
+	fi
+
+	echo "Checking existing jail"
+
+	# Check if we need to build the jail - skip if existing pkg is updated
+	pkgName=$(make -C ${POUDRIERE_PORTDIR}/os/src -V PKGNAME PORTSDIR=${POUDRIERE_PORTDIR} __MAKE_CONF=${OBJDIR}/poudriere.d/${POUDRIERE_BASE}}-make.conf)
+	echo "Looking for ${POUDRIERE_PKGDIR}/All/${pkgName}.txz"
+	if [ ! -e "${POUDRIERE_PKGDIR}/All/${pkgName}.txz" ] ; then
+		echo "Different os/src detected for ${POUDRIERE_BASE} jail"
+		return 1
+	fi
+
+	# Do our options files exist?
+	if [ ! -e "${POUDRIERE_PKGDIR}/buildworld.options" ] ; then
+		return 1
+	fi
+	if [ ! -e "${POUDRIERE_PKGDIR}/buildkernel.options" ] ; then
+		return 1
+	fi
+
+	# Have the world options changed?
+	newOpt=$(get_world_flags | md5)
+	oldOpt=$(cat ${POUDRIERE_PKGDIR}/buildworld.options | md5)
+	if [ "${newOpt}" != "${oldOpt}" ] ;then
+		return 1
+	fi
+	# Have the kernel options changed?
+	newOpt=$(get_kernel_flags | md5)
+	oldOpt=$(cat ${POUDRIERE_PKGDIR}/buildkernel.options | md5)
+	if [ "${newOpt}" != "${oldOpt}" ] ;then
+		return 1
+	fi
+
+	# Jail is sane!
+	return 0
+}
+
 # Checks if we have a new base ports jail to build, if so we will rebuild it
 setup_poudriere_jail()
 {
+	is_jail_dirty
+	if [ $? -eq 0 ] ; then
+		# Jail is updated, we can skip build
+		return 0
+	fi
+
 	poudriere jail -l | grep -q -w "${POUDRIERE_BASE}"
 	if [ $? -eq 0 ] ; then
-		echo "Checking existing jail"
-
-		# Check if we need to build the jail - skip if existing pkg is updated
-		pkgName=$(make -C ${POUDRIERE_PORTDIR}/os/src -V PKGNAME PORTSDIR=${POUDRIERE_PORTDIR} __MAKE_CONF=${OBJDIR}/poudriere.d/${POUDRIERE_BASE}}-make.conf)
-		echo "Looking for ${POUDRIERE_PKGDIR}/All/${pkgName}.txz"
-		if [ -e "${POUDRIERE_PKGDIR}/All/${pkgName}.txz" ] ; then
-			echo "Using existing ${POUDRIERE_BASE} jail"
-			return 0
-		fi
-
 		# Remove old version
 		echo -e "y\n" | poudriere jail -d -j ${POUDRIERE_BASE}
 	fi
@@ -292,6 +330,10 @@ setup_poudriere_jail()
 	if [ $? -ne 0 ] ; then
 		exit 1
 	fi
+
+	# Save the options used for this build
+	echo "$WORLD_MAKE_FLAGS" > ${POUDRIERE_PKGDIR}/buildworld.options
+	echo "$KERNEL_MAKE_FLAGS" > ${POUDRIERE_PKGDIR}/buildkernel.options
 }
 
 # Scrape the MANIFEST for list of packages to build
