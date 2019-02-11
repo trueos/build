@@ -25,7 +25,7 @@ pipeline {
     stage('Build') {
       post {
         always {
-          archiveArtifacts artifacts: 'release/port-logs/latest/logs/**', fingerprint: true
+          archiveArtifacts artifacts: 'release/port-logs/latest/**', fingerprint: true
           archiveArtifacts artifacts: 'release/src-logs/**', fingerprint: true
         }
       }
