@@ -72,6 +72,7 @@ POUDRIERE_JAILDIR="${POUDRIERE_BASEFS}/jails/${POUDRIERE_BASE}"
 POUDRIERE_PORTDIR="${POUDRIERE_BASEFS}/ports/${POUDRIERE_PORTS}"
 POUDRIERE_PKGDIR="${POUDRIERE_BASEFS}/data/packages/${POUDRIERE_BASE}-${POUDRIERE_PORTS}"
 POUDRIERE_LOGDIR="${POUDRIERE_BASEFS}/data/logs"
+POUDRIERE_PKGLOGS="${POUDRIERE_LOGDIR}/bulk/${POUDRIERE_BASE}-${POUDRIERE_PORTS}"
 POUDRIERED_DIR=/usr/local/etc/poudriere.d
 
 # Temp location for ISO files
@@ -111,8 +112,7 @@ setup_poudriere_conf()
 {
 	echo "Creating poudriere configuration"
 	ZPOOL=$(mount | grep 'on / ' | cut -d '/' -f 1)
-	_pdconf="${POUDRIERED_DIR}/${POUDRIERE_BASE}-poudriere.conf"
-	_pdconf2="${POUDRIERED_DIR}/${POUDRIERE_PORTS}-poudriere.conf"
+	_pdconf="${POUDRIERED_DIR}/${POUDRIERE_PORTS}-poudriere.conf"
 
 	if [ ! -d "${POUDRIERED_DIR}" ] ; then
 		mkdir -p ${POUDRIERED_DIR}
@@ -152,9 +152,6 @@ setup_poudriere_conf()
 		cat /etc/poudriere.conf.release >> ${_pdconf}
 	fi
 
-	# Need config for the ports tree also
-	cp ${_pdconf} ${_pdconf2} 2>/dev/null
-
 }
 
 # We don't need to store poudriere data in our checked out location
@@ -169,7 +166,7 @@ create_release_links()
 	rm release/src-logs >/dev/null 2>/dev/null
 	ln -fs ${POUDRIERE_LOGDIR}/base-ports release/src-logs
 	rm release/port-logs >/dev/null 2>/dev/null
-	ln -fs ${POUDRIERE_LOGDIR}/bulk/${POUDRIERE_BASE}-${POUDRIERE_PORTS} release/port-logs
+	ln -fs ${POUDRIERE_PKGLOGS} release/port-logs
 }
 
 # Called to import the ports tree into poudriere specified in MANIFEST
