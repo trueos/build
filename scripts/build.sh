@@ -327,6 +327,9 @@ setup_poudriere_jail()
 		rm -r ${POUDRIERE_PKGDIR}/*
 	fi
 
+	# Clean out old logs
+	rm ${POUDRIERE_LOGDIR}/base-ports/*
+
 	export KERNEL_MAKE_FLAGS="$(get_kernel_flags)"
 	export WORLD_MAKE_FLAGS="$(get_world_flags)"
 	poudriere jail -c -j $POUDRIERE_BASE -m ports=${POUDRIERE_PORTS} -v ${TRUEOS_VERSION}
