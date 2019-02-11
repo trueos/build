@@ -37,7 +37,8 @@
 	      "sysutils/zol"
       ]
     },
-    "overlay": "",
+    "overlay": {
+    },
     "prune": {
       "default": [
 	"METALOG",

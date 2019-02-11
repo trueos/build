@@ -35,7 +35,8 @@
 		"iso-packages": {
 			"default": []
 		},
-		"overlay": "",
+		"overlay": {
+		},
 		"prune": {
 			"default": [
 				"METALOG",
