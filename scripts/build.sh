@@ -297,6 +297,12 @@ is_jail_dirty()
 	if [ "${newOpt}" != "${oldOpt}" ] ;then
 		return 1
 	fi
+	# Have the os port options changed?
+	newOpt=$(get_os_port_flags | md5)
+	oldOpt=$(cat ${POUDRIERE_PKGDIR}/osport.options | md5)
+	if [ "${newOpt}" != "${oldOpt}" ] ;then
+		return 1
+	fi
 
 	# Jail is sane!
 	return 0
@@ -334,6 +340,8 @@ setup_poudriere_jail()
 	# Save the options used for this build
 	echo "$WORLD_MAKE_FLAGS" > ${POUDRIERE_PKGDIR}/buildworld.options
 	echo "$KERNEL_MAKE_FLAGS" > ${POUDRIERE_PKGDIR}/buildkernel.options
+	OS_PORT=$(get_os_port_flags)
+	echo "$OS_PORT" > ${POUDRIERE_PKGDIR}/osport.options
 }
 
 # Scrape the MANIFEST for list of packages to build
@@ -837,6 +845,26 @@ check_build_environment()
 		echo "Missing compiler! Please install llvm first."
 		exit 1
 	fi
+}
+
+get_os_port_flags()
+{
+	# Check if we have any port-flags to pass back
+	for c in $(jq -r '."ports"."make.conf" | keys[]' ${TRUEOS_MANIFEST} 2>/dev/null | tr -s '\n' ' ')
+	do
+		eval "CHECK=\$$c"
+		if [ -z "$CHECK" -a "$c" != "default" ] ; then continue; fi
+		for i in $(jq -r '."ports"."make.conf"."'$c'" | join(" ")' ${TRUEOS_MANIFEST})
+		do
+			# Skip any non os_ flags
+			echo "$i" | grep -q "^os_"
+			if [ $? -ne 0 ] ; then
+				continue
+			fi
+			WF="$WF ${i}"
+		done
+	done
+	echo "$WF"
 }
 
 get_world_flags()
