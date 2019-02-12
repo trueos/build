@@ -175,14 +175,50 @@ setup_poudriere_ports()
 	# Delete previous ports tree
 	poudriere ports -l | grep -q -w ${POUDRIERE_PORTS}
 	if [ $? -eq 0 ]; then
-		echo "Removing previous poudriere ports tree"
-		echo -e "y\n" | poudriere ports -d -p ${POUDRIERE_PORTS}
+		echo "Updating previous poudriere ports tree"
+		poudriere ports -u -p ${POUDRIERE_PORTS}
+		if [ $? -ne 0 ] ; then
+			echo "Failed updating, checking out ports fresh"
+			echo -e "y\n" | poudriere ports -d -p ${POUDRIERE_PORTS}
+			create_poudriere_ports
+		fi
+	else
+		create_poudriere_ports
 	fi
 
-	# Make sure the various /tmp(s) will work for poudriere
-	#chmod 777 ${JDIR}/tmp
-	#chmod -R 777 ${JDIR}/var/tmp
+	# Do we have any locally checked out sources to copy into poudirere jail?
+	LOCAL_SOURCE_DIR=source
+	if [ -n "$LOCAL_SOURCE_DIR" -a -d "${LOCAL_SOURCE_DIR}" ] ; then
+		rm -rf ${POUDRIERE_PORTDIR}/local_source 2>/dev/null
+		cp -a ${LOCAL_SOURCE_DIR} ${POUDRIERE_PORTDIR}/local_source
+		if [ $? -ne 0 ] ; then
+			exit_err "Failed copying ${LOCAL_SOURCE_DIR} -> ${POUDRIERE_PORTDIR}/local_source"
+		fi
+	fi
 
+	# Add any list of files to strip from port plists
+	# Verify we have anything to strip in our MANIFEST
+	if [ "$(jq -r '."base-packages"."strip-plist" | length' $TRUEOS_MANIFEST)" != "0" ] ; then
+		jq -r '."base-packages"."strip-plist" | join("\n")' $TRUEOS_MANIFEST > ${POUDRIERE_PORTDIR}/strip-plist-ports
+	else
+		rm ${POUDRIERE_PORTDIR}/strip-plist-ports >/dev/null 2>/dev/null
+	fi
+
+
+	rm ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf 2>/dev/null 2>/dev/null
+	for c in $(jq -r '."ports"."make.conf" | keys[]' ${TRUEOS_MANIFEST} 2>/dev/null | tr -s '\n' ' ')
+	do
+		eval "CHECK=\$$c"
+		if [ -z "$CHECK" -a "$c" != "default" ] ; then continue; fi
+
+		# We have a conditional set of packages to include, lets do it
+		jq -r '."ports"."make.conf"."'$c'" | join("\n")' ${TRUEOS_MANIFEST} >>${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
+	done
+
+}
+
+create_poudriere_ports()
+{
 	# Create the new ports tree
 	echo "Creating poudriere ports tree"
 	if [ "$PORTS_TYPE" = "git" ] ; then
@@ -225,36 +261,6 @@ setup_poudriere_ports()
 		# This is used for checking essential packages later
 		POUDRIERE_PORTDIR=${PORTS_URL}
 	fi
-
-	# Do we have any locally checked out sources to copy into poudirere jail?
-	LOCAL_SOURCE_DIR=source
-	if [ -n "$LOCAL_SOURCE_DIR" -a -d "${LOCAL_SOURCE_DIR}" ] ; then
-		rm -rf ${POUDRIERE_PORTDIR}/local_source 2>/dev/null
-		cp -a ${LOCAL_SOURCE_DIR} ${POUDRIERE_PORTDIR}/local_source
-		if [ $? -ne 0 ] ; then
-			exit_err "Failed copying ${LOCAL_SOURCE_DIR} -> ${POUDRIERE_PORTDIR}/local_source"
-		fi
-	fi
-
-	# Add any list of files to strip from port plists
-	# Verify we have anything to strip in our MANIFEST
-	if [ "$(jq -r '."base-packages"."strip-plist" | length' $TRUEOS_MANIFEST)" != "0" ] ; then
-		jq -r '."base-packages"."strip-plist" | join("\n")' $TRUEOS_MANIFEST > ${POUDRIERE_PORTDIR}/strip-plist-ports
-	else
-		rm ${POUDRIERE_PORTDIR}/strip-plist-ports >/dev/null 2>/dev/null
-	fi
-
-
-	rm ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf 2>/dev/null 2>/dev/null
-	for c in $(jq -r '."ports"."make.conf" | keys[]' ${TRUEOS_MANIFEST} 2>/dev/null | tr -s '\n' ' ')
-	do
-		eval "CHECK=\$$c"
-		if [ -z "$CHECK" -a "$c" != "default" ] ; then continue; fi
-
-		# We have a conditional set of packages to include, lets do it
-		jq -r '."ports"."make.conf"."'$c'" | join("\n")' ${TRUEOS_MANIFEST} >>${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
-	done
-
 }
 
 is_jail_dirty()
