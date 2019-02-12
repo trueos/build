@@ -118,6 +118,14 @@ setup_poudriere_conf()
 		mkdir -p ${POUDRIERED_DIR}
 	fi
 
+	# Setup the zpool on the default poudriere.conf if necessary
+	# This is so the user can run regular poudriere commands on these
+	# builds for testing and development
+	grep -q "^ZPOOL=" /usr/local/etc/poudriere.conf
+	if [ $? -ne 0 ] ; then
+		echo "ZPOOL=$ZPOOL" >> /usr/local/etc/poudriere.conf
+	fi
+
 	# Copy the systems poudriere.conf over
 	cat /usr/local/etc/poudriere.conf.sample \
 		| grep -v "ZPOOL=" \
