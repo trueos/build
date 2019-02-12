@@ -163,7 +163,7 @@ setup_poudriere_conf()
 	cp ${_pdconf} ${_pdconf2}
 
 	# Set the TRUEOS_MANIFEST location for os/* build ports
-	echo "TRUEOS_MANIFEST=${TRUEOS_MANIFEST}" >> ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
+	echo "TRUEOS_MANIFEST=${TRUEOS_MANIFEST}" > ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
 }
 
 # We don't need to store poudriere data in our checked out location
@@ -217,7 +217,6 @@ setup_poudriere_ports()
 	fi
 
 
-	rm ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf 2>/dev/null 2>/dev/null
 	for c in $(jq -r '."ports"."make.conf" | keys[]' ${TRUEOS_MANIFEST} 2>/dev/null | tr -s '\n' ' ')
 	do
 		eval "CHECK=\$$c"
