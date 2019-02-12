@@ -162,6 +162,8 @@ setup_poudriere_conf()
 	fi
 	cp ${_pdconf} ${_pdconf2}
 
+	# Set the TRUEOS_MANIFEST location for os/* build ports
+	echo "TRUEOS_MANIFEST=${TRUEOS_MANIFEST}" >> ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
 }
 
 # We don't need to store poudriere data in our checked out location
