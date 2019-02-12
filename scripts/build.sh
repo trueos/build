@@ -113,6 +113,7 @@ setup_poudriere_conf()
 	echo "Creating poudriere configuration"
 	ZPOOL=$(mount | grep 'on / ' | cut -d '/' -f 1)
 	_pdconf="${POUDRIERED_DIR}/${POUDRIERE_PORTS}-poudriere.conf"
+	_pdconf2="${POUDRIERED_DIR}/${POUDRIERE_BASE}-poudriere.conf"
 
 	if [ ! -d "${POUDRIERED_DIR}" ] ; then
 		mkdir -p ${POUDRIERED_DIR}
@@ -159,6 +160,7 @@ setup_poudriere_conf()
 	if [ -e "/etc/poudriere.conf.release" ] ; then
 		cat /etc/poudriere.conf.release >> ${_pdconf}
 	fi
+	cp ${_pdconf} ${_pdconf2}
 
 }
 
