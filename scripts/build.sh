@@ -300,19 +300,20 @@ is_jail_dirty()
 	fi
 
 	# Have the world options changed?
-	newOpt=$(get_world_flags | md5)
+	newOpt=$(get_world_flags | tr -d ' ' | md5)
 	oldOpt=$(cat ${POUDRIERE_PKGDIR}/buildworld.options | md5)
 	if [ "${newOpt}" != "${oldOpt}" ] ;then
 		return 1
 	fi
 	# Have the kernel options changed?
-	newOpt=$(get_kernel_flags | md5)
+	newOpt=$(get_kernel_flags | tr -d ' ' | md5)
 	oldOpt=$(cat ${POUDRIERE_PKGDIR}/buildkernel.options | md5)
 	if [ "${newOpt}" != "${oldOpt}" ] ;then
 		return 1
 	fi
+
 	# Have the os port options changed?
-	newOpt=$(get_os_port_flags | md5)
+	newOpt=$(get_os_port_flags | tr -d ' ' | md5)
 	oldOpt=$(cat ${POUDRIERE_PKGDIR}/osport.options | md5)
 	if [ "${newOpt}" != "${oldOpt}" ] ;then
 		return 1
@@ -355,10 +356,9 @@ setup_poudriere_jail()
 	fi
 
 	# Save the options used for this build
-	echo "$WORLD_MAKE_FLAGS" > ${POUDRIERE_PKGDIR}/buildworld.options
-	echo "$KERNEL_MAKE_FLAGS" > ${POUDRIERE_PKGDIR}/buildkernel.options
-	OS_PORT=$(get_os_port_flags)
-	echo "$OS_PORT" > ${POUDRIERE_PKGDIR}/osport.options
+	get_kernel_flags | tr -d ' ' > ${POUDRIERE_PKGDIR}/buildkernel.options
+	get_world_flags | tr -d ' ' > ${POUDRIERE_PKGDIR}/buildworld.options
+	get_os_port_flags | tr -d ' ' > ${POUDRIERE_PKGDIR}/osport.options
 }
 
 # Scrape the MANIFEST for list of packages to build
