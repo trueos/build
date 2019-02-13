@@ -770,8 +770,7 @@ EOF
 		# We have a conditional set of packages to include, lets do it
 		for i in $(jq -r '."iso"."iso-packages"."'$c'" | join(" ")' ${TRUEOS_MANIFEST})
 		do
-			pkg-static -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh \
-				-R /etc/pkg \
+			pkg-static -R /etc/pkg \
 				-c ${ISODIR} \
 				install -y $i
 				if [ $? -ne 0 ] ; then
