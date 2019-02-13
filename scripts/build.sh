@@ -111,7 +111,14 @@ env_check()
 setup_poudriere_conf()
 {
 	echo "Creating poudriere configuration"
-	ZPOOL=$(mount | grep 'on / ' | cut -d '/' -f 1)
+
+	# Check if a default ZPOOL has been setup in poudriere.conf and use that
+	DEFAULT_ZPOOL=$(grep "^ZPOOL=" /usr/local/etc/poudriere.conf | cut -d '=' -f 2)
+	if [ -n "${DEFAULT_ZPOOL}" ] ; then
+		ZPOOL="${DEFAULT_ZPOOL}"
+	else
+		ZPOOL=$(mount | grep 'on / ' | cut -d '/' -f 1)
+	fi
 	_pdconf="${POUDRIERED_DIR}/${POUDRIERE_PORTS}-poudriere.conf"
 	_pdconf2="${POUDRIERED_DIR}/${POUDRIERE_BASE}-poudriere.conf"
 
