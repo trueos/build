@@ -21,7 +21,8 @@
         "sysutils/tmux",
         "www/nginx",
         "security/ca_root_nss",
-        "sysutils/sysup"
+        "sysutils/sysup",
+	"textproc/jq"
       ]
     },
     "auto-install-script": "",
