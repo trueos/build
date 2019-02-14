@@ -172,8 +172,8 @@ setup_poudriere_conf()
 	# Set the TRUEOS_MANIFEST location for os/* build ports
 	echo "TRUEOS_MANIFEST=${TRUEOS_MANIFEST}" > ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
 	# Save kernel/world flags as well
-	get_world_flags >> ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
-	get_kernel_flags >> ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
+	get_world_flags | sed 's|^ ||g' >> ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
+	get_kernel_flags | sed 's|^ ||g' >> ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
 }
 
 # We don't need to store poudriere data in our checked out location
