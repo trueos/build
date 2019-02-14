@@ -39,7 +39,7 @@
 		"dist-packages": {
 			"default": []
 		},
-		"file-name": "TrueOS-Snapshot-x64-%%DATE%%",
+		"file-name": "TrueOS-Snapshot-EC2-x64-%%DATE%%",
 		"install-script": "",
 		"iso-packages": {
 			"default": []
@@ -49,15 +49,15 @@
 		"post-install-commands": [
 			{
 				"chroot":true,
-				"command":"ln -s /usr/local/etc/init.d/ec2_configinit /etc/runlevel/default/ec2_configinit"
+				"command":"ln -s /usr/local/etc/init.d/ec2_configinit /etc/runlevels/default/ec2_configinit"
 			},
 			{
 				"chroot":true,
-				"command":"ln -s /usr/local/etc/init.d/ec2_fetchkey /etc/runlevel/default/ec2_fetchkey"
+				"command":"ln -s /usr/local/etc/init.d/ec2_fetchkey /etc/runlevels/default/ec2_fetchkey"
 			},
 			{
 				"chroot":true,
-				"command":"ln -s /usr/local/etc/init.d/ec2_loghostkey /etc/runlevel/default/ec2_loghostkey"
+				"command":"ln -s /usr/local/etc/init.d/ec2_loghostkey /etc/runlevels/default/ec2_loghostkey"
 			},
 			{
 				"chroot":true,
