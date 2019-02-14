@@ -28,7 +28,7 @@
     "dist-packages": {
       "default": []
     },
-    "file-name": "TrueOS-ZoF-Snapshot-x64-%%GITHASH%%-%%DATE%%",
+    "file-name": "TrueOS-ZoF-Snapshot-x64-%%DATE%%",
     "install-script": "",
     "iso-packages": {
       "default": [
