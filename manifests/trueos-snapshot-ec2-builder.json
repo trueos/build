@@ -133,7 +133,7 @@
 			"AxxsOeRYAlBFJ4oo2cFVyqkCAwEAAQ==",
 			"-----END PUBLIC KEY-----"
 		],
-		"url": "https://pkg.trueos.org/pkg/snapshot/${ABI}/latest"
+		"url": "https://pkg.trueos.org/pkg/snapshot-ec2/${ABI}/latest"
 	},
 	"pkg-repo-name": "TrueOS",
 	"pkg-train-name": "snapshot",
