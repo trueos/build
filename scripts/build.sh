@@ -704,6 +704,9 @@ create_iso_dir()
 create_offline_update()
 {
 	local NAME="system-update.img"
+	if [ ! -d "release/update" ] ; then
+		mkdir -p release/update
+	fi
 	echo "Creating ${NAME}..."
 	makefs release/update/${NAME} ${PKG_DISTDIR}
 	if [ $? -ne 0 ] ; then
