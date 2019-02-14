@@ -2,14 +2,12 @@
   "base-packages": {
     "world-flags": {
       "default": [
-        "WITHOUT_ZFS=YES",
-        "MK_ZFS=no"
+        "WITHOUT_ZFS=YES"
       ]
     },
     "kernel-flags": {
       "default": [
-        "WITHOUT_ZFS=YES",
-        "MK_ZFS=no"
+        "WITHOUT_ZFS=YES"
       ]
     }
   },
@@ -108,8 +106,9 @@
     "build-all": false,
     "make.conf": {
       "default": [
-        "MAKE_JOBS_NUMBER_LIMIT=3",
-        "MALLOC_PRODUCTION=YES"
+        "MALLOC_PRODUCTION=YES",
+	"os_buildkernel_UNSET+=ZFS",
+	"os_buildworld_UNSET+=ZFS"
       ]
     },
     "src.conf": {
