@@ -171,6 +171,9 @@ setup_poudriere_conf()
 
 	# Set the TRUEOS_MANIFEST location for os/* build ports
 	echo "TRUEOS_MANIFEST=${TRUEOS_MANIFEST}" > ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
+	# Save kernel/world flags as well
+	get_world_flags >> ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
+	get_kernel_flags >> ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
 }
 
 # We don't need to store poudriere data in our checked out location
@@ -311,7 +314,7 @@ is_jail_dirty()
 	echo "Checking existing jail"
 
 	# Check if we need to build the jail - skip if existing pkg is updated
-	pkgName=$(make -C ${POUDRIERE_PORTDIR}/os/src -V PKGNAME PORTSDIR=${POUDRIERE_PORTDIR} __MAKE_CONF=${OBJDIR}/poudriere.d/${POUDRIERE_BASE}}-make.conf)
+	pkgName=$(make -C ${POUDRIERE_PORTDIR}/os/src -V PKGNAME PORTSDIR=${POUDRIERE_PORTDIR} __MAKE_CONF=${OBJDIR}/poudriere.d/${POUDRIERE_BASE}-make.conf)
 	echo "Looking for ${POUDRIERE_PKGDIR}/All/${pkgName}.txz"
 	if [ ! -e "${POUDRIERE_PKGDIR}/All/${pkgName}.txz" ] ; then
 		echo "Different os/src detected for ${POUDRIERE_BASE} jail"
