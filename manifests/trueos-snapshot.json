@@ -89,11 +89,10 @@
 		"build": {
 			"default": [
 				"archivers/pigz",
-				"devel/gdb",
 				"devel/git",
-				"devel/jenkins",
 				"dns/mDNSResponder_nss",
 				"editors/vim-console",
+				"java/openjdk8",
 				"lang/python",
 				"lang/python2",
 				"lang/python3",
@@ -106,7 +105,10 @@
 		},
 		"build-all": false,
 		"make.conf": {
-			"default": []
+			"default": [
+				"java_openjdk8_UNSET+=ALSA",
+				"java_openjdk8_UNSET+=X11"
+			]
 		},
 		"type": "git",
 		"url": "https://github.com/trueos/trueos-ports"

@@ -16,8 +16,8 @@
 		"auto-install-packages": {
 			"default": [
 				"devel/git-lite",
-				"devel/jenkins",
 				"editors/vim-console",
+				"lang/openjdk8",
 				"net/bsdec2-image-upload",
 				"net/rsync",
 				"os/userland",
@@ -168,10 +168,16 @@
 		},
 		"build-all": false,
 		"make.conf": {
-			"default": []
+			"default": [
+				"java_openjdk8_UNSET+=ALSA",
+				"java_openjdk8_UNSET+=X11"
+			]
 		},
 		"type": "git",
 		"url": "https://github.com/trueos/trueos-ports"
 	},
+	"poudriere-conf": [
+		"ALLOW_MAKE_JOBS_PACKAGES=\"openjdk8*\""
+	],
 	"version": "1.1"
 }
