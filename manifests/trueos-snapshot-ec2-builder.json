@@ -61,19 +61,15 @@
 			},
 			{
 				"chroot":true,
+				"command":"ln -s /etc/init.d/ntpd /etc/runlevels/default/ntpd"
+			},
+			{
+				"chroot":true,
 				"command":"sysrc -f /etc/rc.conf ec2_fetchkey_user=root"
 			},
 			{
 				"chroot":true,
-				"command":"sysrc -f /etc/rc.conf ifconfig_ena0=IPV4"
-			},
-			{
-				"chroot":true,
-				"command":"sysrc -f /etc/rc.conf ifconfig_xn0=IPV4"
-			},
-			{
-				"chroot":true,
-				"command":"sysrc -f /etc/rc.conf ifconfig_em0=IPV4"
+				"command":"sysrc -f /etc/rc.conf ifconfig_DEFAULT=\"ALL\""
 			},
 			{
 				"chroot":true,
@@ -81,7 +77,27 @@
 			},
 			{
 				"chroot":true,
-				"command":"sysrc -f /boot/loader.conf if_ena_load=YES"
+				"command":"sysrc -f /boot/loader.conf autoboot_delay=\"-1\""
+			},
+			{
+				"chroot":true,
+				"command":"sysrc -f /boot/loader.conf beastie_disable=\"YES\""
+			},
+			{
+				"chroot":true,
+				"command":"sysrc -f /boot/loader.conf hint.atkbd.0.disabled=1"
+			},
+			{
+				"chroot":true,
+				"command":"sysrc -f /boot/loader.conf hint.atkbdc.0.disabled=1"
+			},
+			{
+				"chroot":true,
+				"command":"sysrc -f /boot/loader.conf boot_multicons=\"YES\""
+			},
+			{
+				"chroot":true,
+				"command":"sed -i '' -e 's/^pool/#pool/' -e 's/^#server.*/server 169.254.169.123 iburst/' /etc/ntp.conf"
 			},
 			{
 				"chroot":true,
