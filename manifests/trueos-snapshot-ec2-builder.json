@@ -77,6 +77,10 @@
 			},
 			{
 				"chroot":true,
+				"command":"sysrc -f /boot/loader.conf if_ena_load=YES"
+			},
+			{
+				"chroot":true,
 				"command":"sysrc -f /boot/loader.conf autoboot_delay=\"-1\""
 			},
 			{
@@ -85,11 +89,11 @@
 			},
 			{
 				"chroot":true,
-				"command":"sysrc -f /boot/loader.conf hint.atkbd.0.disabled=1"
+				"command":"echo 'hint.atkbd.0.disabled=1' >> /boot/loader.conf"
 			},
 			{
 				"chroot":true,
-				"command":"sysrc -f /boot/loader.conf hint.atkbdc.0.disabled=1"
+				"command":"echo 'hint.atkbdc.0.disabled=1' >> /boot/loader.conf"
 			},
 			{
 				"chroot":true,
