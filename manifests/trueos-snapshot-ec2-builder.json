@@ -81,6 +81,10 @@
 			},
 			{
 				"chroot":true,
+				"command":"sysrc -f /boot/loader.conf if_ena_load=YES"
+			},
+			{
+				"chroot":true,
 				"command":"echo \"PasswordAuthentication no\" >>/etc/ssh/sshd_config"
 			},
 			{
