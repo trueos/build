@@ -386,6 +386,9 @@ setup_poudriere_jail()
 	fi
 
 	# Save the options used for this build
+	if [ ! -d "${POUDRIERE_PKGDIR}" ] ; then
+		mkdir -p ${POUDRIERE_PKGDIR}
+	fi
 	get_kernel_flags | tr -d ' ' > ${POUDRIERE_PKGDIR}/buildkernel.options
 	get_world_flags | tr -d ' ' > ${POUDRIERE_PKGDIR}/buildworld.options
 	get_os_port_flags | tr -d ' ' > ${POUDRIERE_PKGDIR}/osport.options
