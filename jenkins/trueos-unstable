@@ -1,0 +1,72 @@
+/*
+
+Our default Jenkins pipeline we use to create our on-commit
+snapshot builds of trueos-master branch.
+
+*/
+
+pipeline {
+  agent { label 'TrueOS-Build-Unstable' }
+
+  environment {
+    GH_ORG = 'trueos'
+    GH_REPO = 'trueos'
+    POUDRIERE_BASE = 'trueos-unstable-base'
+    POUDRIERE_PORTS = 'trueos-unstable-ports'
+    TRUEOS_VERSION = '13.0'
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+    stage('Build') {
+      post {
+        always {
+          archiveArtifacts artifacts: 'release/port-logs/latest/**', fingerprint: true
+          archiveArtifacts artifacts: 'release/src-logs/**', fingerprint: true
+        }
+      }
+      environment {
+         SIGNING_KEY = credentials('a50f9ddd-1460-4951-a304-ddbf6f2f7990')
+	 TRUEOS_MANIFEST="${env.WORKSPACE}/manifests/trueos-unstable.json"
+      }
+      steps {
+        sh 'make ports'
+      }
+    }
+    stage('ISO') {
+      post {
+        always {
+          archiveArtifacts artifacts: 'release/iso-logs/**', fingerprint: true
+        }
+      }
+      environment {
+         SIGNING_KEY = credentials('a50f9ddd-1460-4951-a304-ddbf6f2f7990')
+	 TRUEOS_MANIFEST="${env.WORKSPACE}/manifests/trueos-unstable.json"
+      }
+      steps {
+        sh 'make iso'
+      }
+    }
+    stage('Publish') {
+      steps {
+        sshagent (credentials: ['syncbot-credentials']) {
+          sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null syncbot@pkg.trueos.org mkdir -p /data/pkg/unstable/FreeBSD:13:amd64/latest || true'
+          sh 'cd release/packages && rsync -av --delete-after --delay-updates -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" . syncbot@pkg.trueos.org:/data/pkg/unstable/FreeBSD:13:amd64/latest/'
+          sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null syncbot@pkg.trueos.org mkdir -p /data/iso/unstable/ || true'
+          sh 'rsync -av --delete-after --delay-updates -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" release/iso/ syncbot@pkg.trueos.org:/data/iso/unstable/'
+        }
+      }
+    }
+  }
+  post {
+    success {
+      script {
+        cleanWs notFailBuild: true
+      }
+    }
+  }
+}
