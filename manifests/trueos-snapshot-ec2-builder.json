@@ -39,7 +39,7 @@
 		"dist-packages": {
 			"default": []
 		},
-		"file-name": "TrueOS-Snapshot-EC2-x64-%%DATE%%",
+		"file-name": "TrueOS-Snapshot-EC2-x64-%%GITHASH%%-%%DATE%%",
 		"install-script": "",
 		"iso-packages": {
 			"default": []

@@ -14,11 +14,14 @@
   "iso": {
     "auto-install-packages": {
       "default": [
-        "ports-mgmt/poudriere",
+        "os/userland",
+        "os/kernel",
+        "ports-mgmt/poudriere-trueos",
 	"security/sudo",
         "sysutils/ipmitool",
         "sysutils/dmidecode",
         "sysutils/tmux",
+        "sysutils/zol",
         "www/nginx",
         "security/ca_root_nss",
         "sysutils/sysup",
@@ -29,7 +32,7 @@
     "dist-packages": {
       "default": []
     },
-    "file-name": "TrueOS-ZoF-Snapshot-x64-%%DATE%%",
+    "file-name": "TrueOS-ZoF-Snapshot-x64-%%GITHASH%%-%%DATE%%",
     "install-script": "",
     "iso-packages": {
       "default": [
@@ -100,7 +103,6 @@
         "lang/python3",
         "net/rsync",
         "ports-mgmt/poudriere-trueos",
-        "ports-mgmt/poudriere-devel",
 	"shells/bash"
       ]
     },
@@ -120,5 +122,8 @@
     "type": "git",
     "url": "https://github.com/trueos/trueos-ports"
   },
+  "poudriere-conf": [
+		"ALLOW_MAKE_JOBS_PACKAGES=\"openjdk8* llvm* mpfr*\""
+  ],
   "version": "1.1"
 }

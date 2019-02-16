@@ -24,15 +24,14 @@
 				"sysutils/tmux",
 				"security/ca_root_nss",
 				"sysutils/sysup",
-				"textproc/jq",
-				"www/nginx"
+				"textproc/jq"
 			]
 		},
 		"auto-install-script": "",
 		"dist-packages": {
 			"default": []
 		},
-		"file-name": "TrueOS-Snapshot-x64-%%DATE%%",
+		"file-name": "TrueOS-Snapshot-x64-%%GITHASH%%-%%DATE%%",
 		"install-script": "",
 		"iso-packages": {
 			"default": []
@@ -92,15 +91,14 @@
 				"devel/git",
 				"dns/mDNSResponder_nss",
 				"editors/vim-console",
-				"java/openjdk8",
 				"lang/python",
 				"lang/python2",
 				"lang/python3",
-				"net/bsdec2-image-upload",
+				"java/openjdk8",
 				"net/rsync",
 				"ports-mgmt/poudriere-trueos",
-				"sysutils/ec2-scripts",
-				"textproc/jq"
+				"textproc/jq",
+				"www/nginx"
 			]
 		},
 		"build-all": false,
@@ -113,5 +111,8 @@
 		"type": "git",
 		"url": "https://github.com/trueos/trueos-ports"
 	},
+	"poudriere-conf": [
+		"ALLOW_MAKE_JOBS_PACKAGES=\"openjdk8* llvm* mpfr*\""
+	],
 	"version": "1.1"
 }
