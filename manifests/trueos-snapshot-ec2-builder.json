@@ -17,7 +17,7 @@
 			"default": [
 				"devel/git-lite",
 				"editors/vim-console",
-				"lang/openjdk8",
+				"java/openjdk8",
 				"net/bsdec2-image-upload",
 				"net/rsync",
 				"os/userland",
