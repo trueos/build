@@ -119,6 +119,11 @@ setup_poudriere_conf()
 	else
 		ZPOOL=$(mount | grep 'on / ' | cut -d '/' -f 1)
 	fi
+	DEFAULT_DISTFILES="/usr/ports/distfiles"
+	DISTFILES=$(grep "^DISTFILES_CACHE=" /usr/local/etc/poudriere.conf | head -n 1 | cut -d '=' -f 2)
+	if [ -z "${DISTFILES}" ] ; then
+		DISTFILES="${DEFAULT_DISTFILES}"
+	fi
 	_pdconf="${POUDRIERED_DIR}/${POUDRIERE_PORTS}-poudriere.conf"
 	_pdconf2="${POUDRIERED_DIR}/${POUDRIERE_BASE}-poudriere.conf"
 
@@ -148,6 +153,7 @@ setup_poudriere_conf()
 	echo "USE_TMPFS=data" >> ${_pdconf}
 	echo "BASEFS=$POUDRIERE_BASEFS" >> ${_pdconf}
 	echo "ATOMIC_PACKAGE_REPOSITORY=no" >> ${_pdconf}
+	echo "DISTFILES_CACHE=${DISTFILES}" >> ${_pdconf}
 	#echo "PKG_REPO_FROM_HOST=yes" >> ${_pdconf}
 	echo "ALLOW_MAKE_JOBS_PACKAGES=\"chromium* iridium* aws-sdk* gcc* webkit* llvm* clang* firefox* ruby* cmake* rust* qt5-web* phantomjs* swift* perl5* py*\"" >> ${_pdconf}
 	echo "PRIORITY_BOOST=\"pypy* openoffice* iridium* chromium* aws-sdk* libreoffice*\"" >> ${_pdconf}
