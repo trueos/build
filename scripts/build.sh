@@ -150,7 +150,7 @@ setup_poudriere_conf()
 	echo "Using zpool: $ZPOOL"
 	echo "ZPOOL=$ZPOOL" >> ${_pdconf}
 	echo "Using Ports Tree: $PORTS_URL"
-	echo "USE_TMPFS=data" >> ${_pdconf}
+	echo "USE_TMPFS=yes" >> ${_pdconf}
 	echo "BASEFS=$POUDRIERE_BASEFS" >> ${_pdconf}
 	echo "ATOMIC_PACKAGE_REPOSITORY=no" >> ${_pdconf}
 	echo "DISTFILES_CACHE=${DISTFILES}" >> ${_pdconf}
