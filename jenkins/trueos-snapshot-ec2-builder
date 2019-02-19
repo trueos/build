@@ -6,7 +6,7 @@ snapshot builds of trueos-master branch.
 */
 
 pipeline {
-  agent { label 'TrueOS-Builder-Large' }
+  agent { label 'TrueOS-Build-Snapshot' }
 
   environment {
     GH_ORG = 'trueos'
