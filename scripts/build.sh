@@ -998,6 +998,42 @@ select_manifest()
 	echo "$MANIFEST" > .config/manifest
 }
 
+load_vm_settings() {
+	# Load our VM settings
+	VMTYPE=$(jq -r '."vm"."type"' ${TRUEOS_MANIFEST} 2>/dev/null)
+	case $VMTYPE in
+		ec2) ;;
+		null) VMTYPE="ec2" ;;
+		*) exit_err "Invalid VM type specified" ;;
+	esac
+	VMSIZE=$(jq -r '."vm"."size"' ${TRUEOS_MANIFEST} 2>/dev/null)
+	VMINSCFG=$(jq -r '."vm"."cfgfile"' ${TRUEOS_MANIFEST} 2>/dev/null)
+	if [ ! -e "$VMINSCFG" ] ; then
+		exit_err "Missing cfgfile: $VMINSCFG"
+	fi
+}
+
+# Build a VM disk image based upon specifications in JSON manifest
+create_vm_disk() {
+
+}
+
+do_vm_create() {
+	if [ -d "release/vm-logs" ] ; then
+		rm -rf release/vm-logs
+	fi
+	mkdir -p release/vm-logs
+
+	load_vm_settings
+
+	echo "Creating vm disk image"
+	create_vm_disk >release/vm-logs/01_vm_disk.log 2>&1
+
+	echo "Installing VM to disk image"
+
+	echo "Packaging VM disk image"
+}
+
 do_iso_create() {
 	if [ -d "release/iso-logs" ] ; then
 		rm -rf release/iso-logs
@@ -1045,6 +1081,9 @@ case $1 in
 		   ;;
 	iso) env_check
 	     do_iso_create
+	     ;;
+	 vm) env_check
+	     do_vm_create
 	     ;;
 	check)  env_check
 		check_build_environment
