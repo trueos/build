@@ -183,6 +183,6 @@
 	"vm": {
 		"type":"ec2",
 		"size":"3G",
-		"cfgfile":"vm-cfg/ec2-snapshot.cfg"
+		"disk-config":"ec2"
 	}
 }

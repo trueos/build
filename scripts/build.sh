@@ -77,8 +77,11 @@ POUDRIERED_DIR=/usr/local/etc/poudriere.d
 
 # Temp location for ISO files
 ISODIR="tmp/iso"
-# Validate that we have a good TRUEOS_MANIFEST and sane build environment
 
+# Temp pool name to use for VM creation
+VMPOOLNAME="${VMPOOLNAME:-vm-gen-pool}"
+
+# Validate that we have a good TRUEOS_MANIFEST and sane build environment
 env_check()
 {
 	echo "Using TRUEOS_MANIFEST: $TRUEOS_MANIFEST" >&2
@@ -1007,22 +1010,60 @@ load_vm_settings() {
 		*) exit_err "Invalid VM type specified" ;;
 	esac
 	VMSIZE=$(jq -r '."vm"."size"' ${TRUEOS_MANIFEST} 2>/dev/null)
-	VMINSCFG=$(jq -r '."vm"."cfgfile"' ${TRUEOS_MANIFEST} 2>/dev/null)
-	if [ ! -e "$VMINSCFG" ] ; then
-		exit_err "Missing cfgfile: $VMINSCFG"
+	VMCFG=$(jq -r '."vm"."disk-config"' ${TRUEOS_MANIFEST} 2>/dev/null)
+	if [ ! -e "vm-diskcfg/${VMCFG}.sh" ] ; then
+		exit_err "Missing cfg: vm-diskcfg/${VMCFG}.sh"
 	fi
+}
+
+cleanup_md() {
+	if [ ! -e "/dev/${MDDEV}" ] ; then
+		return 0
+	fi
+	zpool export ${VMPOOLNAME}
+	mdconfig -d -u ${MDDEV}
 }
 
 # Build a VM disk image based upon specifications in JSON manifest
 create_vm_disk() {
 
+	truncate -s $VMSIZE vm-dir/vm-disk.img
+	if [ $? -ne 0 ] ; then
+		exit_err "Failed truncating vm disk image"
+	fi
+
+	MDDEV=$(mdconfig -a -t vnode -f vm-dir/vm-disk.img)
+	if [ ! -e "/dev/${MDDEV}" ] ; then
+		exit_err "Failed mdconfig of vm-disk.img"
+	fi
+
+	trap cleanup_md SIGPIPE
+	trap cleanup_md SIGINT
+	trap cleanup_md SIGTERM
+
+	sh vm-diskcfg/${VMCFG}.sh ${MDDEV} ${VMPOOLNAME}
+	if [ $? -ne 0 ] ; then
+		cleanup_md
+		exit_err "Failed setting up disk for VM image"
+	fi
 }
 
-do_vm_create() {
+cleanup_vm_dir() {
+
 	if [ -d "release/vm-logs" ] ; then
 		rm -rf release/vm-logs
 	fi
 	mkdir -p release/vm-logs
+
+	if [ -d "vm-dir" ] ; then
+		rm -rf vm-dir
+	fi
+	mkdir -p vm-dir
+}
+
+do_vm_create() {
+
+	cleanup_vm_dir
 
 	load_vm_settings
 
@@ -1030,6 +1071,9 @@ do_vm_create() {
 	create_vm_disk >release/vm-logs/01_vm_disk.log 2>&1
 
 	echo "Installing VM to disk image"
+	zpool list
+	zfs list
+	cleanup_md
 
 	echo "Packaging VM disk image"
 }
