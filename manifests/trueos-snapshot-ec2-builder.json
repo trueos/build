@@ -21,7 +21,6 @@
 				"net/bsdec2-image-upload",
 				"net/rsync",
 				"os/userland",
-				"os/docs",
 				"os/kernel",
 				"ports-mgmt/poudriere-trueos",
 				"security/sudo",
