@@ -1140,9 +1140,9 @@ run_vm_post_install() {
 			internal=$(cat tmp/cmd.json | jq -r ".[${i}]" | jq -r '."chroot"')
 			cmd=$(cat tmp/cmd.json | jq -r ".[${i}]" | jq -r '."command"')
 			if [ "$internal" = "true" ] ; then
-				echo "chroot ${VMDIR} ${cmd} ; exit \$?" > tmp/pi.cmd
-				sh tmp/pi.cmd || exit_err "Failed running $cmd"
-				rm tmp/pi.cmd
+				echo "$cmd" >${VMDIR}/.runcmd.sh
+				chroot ${VMDIR} sh /.runcmd.sh || exit_err "Failed running $cmd"
+				rm ${VMDIR}/.runcmd.sh
 			else
 				echo "Skipping external command"
 			fi
