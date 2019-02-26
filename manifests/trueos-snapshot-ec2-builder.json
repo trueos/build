@@ -180,8 +180,9 @@
 	],
 	"version": "1.1",
 	"vm": {
-		"type":"ec2",
 		"size":"3G",
-		"disk-config":"ec2"
+		"file-name": "TrueOS-Snapshot-EC2-x64-%%GITHASH%%-%%DATE%%",
+		"disk-config":"zfs-noswap",
+		"boot":"zfs"
 	}
 }

@@ -17,7 +17,7 @@ if [ ! -d "vm-mnt" ] ; then
 	mkdir vm-mnt
 fi
 
-gpart create -s gpt ${DISK}
+gpart create -s gpt -f active ${DISK}
 if [ $? -ne 0 ] ; then
 	exit 1
 fi
@@ -52,5 +52,6 @@ zfs create -o canmount=off ${POOL}/var
 zfs create -o canmount=on -o mountpoint=/var/audit ${POOL}/var/audit
 zfs create -o canmount=on -o mountpoint=/var/mail ${POOL}/var/mail
 zfs create -o canmount=on -o mountpoint=/var/tmp ${POOL}/var/tmp
+zpool set bootfs=${POOL}/ROOT/initial ${POOL}
 
 # Disk provision done

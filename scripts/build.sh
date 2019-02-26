@@ -1003,17 +1003,17 @@ select_manifest()
 
 load_vm_settings() {
 	# Load our VM settings
-	VMTYPE=$(jq -r '."vm"."type"' ${TRUEOS_MANIFEST} 2>/dev/null)
-	case $VMTYPE in
-		ec2) ;;
-		null) VMTYPE="ec2" ;;
-		*) exit_err "Invalid VM type specified" ;;
-	esac
 	VMSIZE=$(jq -r '."vm"."size"' ${TRUEOS_MANIFEST} 2>/dev/null)
 	VMCFG=$(jq -r '."vm"."disk-config"' ${TRUEOS_MANIFEST} 2>/dev/null)
 	if [ ! -e "vm-diskcfg/${VMCFG}.sh" ] ; then
 		exit_err "Missing cfg: vm-diskcfg/${VMCFG}.sh"
 	fi
+	VMBOOT=$(jq -r '."vm"."boot"' ${TRUEOS_MANIFEST} 2>/dev/null)
+	case $VMBOOT in
+		ufs) ;;
+		zfs) ;;
+		*) exit_err "Unknown vm.boot option!" ;;
+	esac
 }
 
 cleanup_md() {
@@ -1032,7 +1032,7 @@ create_vm_disk() {
 		exit_err "Failed truncating vm disk image"
 	fi
 
-	MDDEV=$(mdconfig -a -t vnode -f vm-dir/vm-disk.img)
+	export MDDEV=$(mdconfig -a -t vnode -f vm-dir/vm-disk.img)
 	if [ ! -e "/dev/${MDDEV}" ] ; then
 		exit_err "Failed mdconfig of vm-disk.img"
 	fi
@@ -1040,6 +1040,7 @@ create_vm_disk() {
 	trap cleanup_md SIGPIPE
 	trap cleanup_md SIGINT
 	trap cleanup_md SIGTERM
+	trap cleanup_md EXIT
 
 	sh vm-diskcfg/${VMCFG}.sh ${MDDEV} ${VMPOOLNAME}
 	if [ $? -ne 0 ] ; then
@@ -1061,21 +1062,137 @@ cleanup_vm_dir() {
 	mkdir -p vm-dir
 }
 
+create_vm_dir()
+{
+	ABI=$(pkg-static -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh config ABI)
+
+	mk_repo_config
+
+	BASE_PACKAGES="os/userland os/kernel ports-mgmt/pkg textproc/jq"
+
+	mkdir -p ${VMDIR}/tmp
+	mkdir -p ${VMDIR}/var/db/pkg
+	cp -r tmp/repo-config ${VMDIR}/tmp/repo-config
+
+	export PKG_DBDIR="${VMDIR}/var/db/pkg"
+
+	# Install the base packages into vm dir
+	for pkg in ${BASE_PACKAGES}
+	do
+		pkg-static -r ${VMDIR} -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh \
+			-R tmp/repo-config \
+			install -y ${pkg}
+		if [ $? -ne 0 ] ; then
+			exit_err "Failed installing base packages to VM directory..."
+		fi
+
+	done
+
+	# Install the packages from JSON manifest
+	for ptype in auto-install-packages
+	do
+		for c in $(jq -r '."iso"."'${ptype}'" | keys[]' ${TRUEOS_MANIFEST} 2>/dev/null | tr -s '\n' ' ')
+		do
+			eval "CHECK=\$$c"
+			if [ -z "$CHECK" -a "$c" != "default" ] ; then continue; fi
+			for i in $(jq -r '."iso"."'${ptype}'"."'$c'" | join(" ")' ${TRUEOS_MANIFEST})
+			do
+				if [ -z "${i}" ] ; then continue; fi
+				echo "Installing: $i"
+				pkg-static -r ${VMDIR} -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh \
+					-R tmp/repo-config \
+					install -y ${i}
+				if [ $? -ne 0 ] ; then
+					exit_err "Failed installing $i to VM..."
+				fi
+			done
+		done
+	done
+	unset PKG_DBDIR
+}
+
+run_vm_post_install() {
+	# Stamp the boot-loader
+	case ${VMBOOT} in
+		ufs)
+			echo "Stamping UFS boot-loader"
+			echo "gpart bootcode -b ${VMDIR}/boot/pmbr -p ${VMDIR}/boot/gptboot -i 1 ${MDDEV}"
+			gpart bootcode -b ${VMDIR}/boot/pmbr -p ${VMDIR}/boot/gptboot -i 1 ${MDDEV} || exit_err "failed stamping boot!"
+			;;
+		zfs) 
+			echo "Stamping ZFS boot-loader"
+			echo "gpart bootcode -b ${VMDIR}/boot/pmbr -p ${VMDIR}/boot/gptzfsboot -i 1 ${MDDEV}"
+			gpart bootcode -b ${VMDIR}/boot/pmbr -p ${VMDIR}/boot/gptzfsboot -i 1 ${MDDEV} || exit_err "failed stamping boot!"
+			;;
+	esac
+
+	# Touch a couple common files first
+	touch ${VMDIR}/etc/rc.conf
+	touch ${VMDIR}/boot/loader.conf
+
+	# Loop through and run post-install commands
+	jq -r '."iso"."post-install-commands"' ${TRUEOS_MANIFEST} > tmp/cmd.json
+	CMDLEN=$(jq -r '. | length' tmp/cmd.json)
+	if [ $CMDLEN -gt 0 ] ; then
+		i=0
+		while [ $i -lt $CMDLEN ]
+		do
+			internal=$(cat tmp/cmd.json | jq -r ".[${i}]" | jq -r '."chroot"')
+			cmd=$(cat tmp/cmd.json | jq -r ".[${i}]" | jq -r '."command"')
+			if [ "$internal" = "true" ] ; then
+				echo "chroot ${VMDIR} ${cmd} ; exit \$?" > tmp/pi.cmd
+				sh tmp/pi.cmd || exit_err "Failed running $cmd"
+				rm tmp/pi.cmd
+			else
+				echo "Skipping external command"
+			fi
+			i=$(expr $i + 1)
+		done
+	fi
+}
+
 do_vm_create() {
+	VMDIR="vm-mnt"
 
 	cleanup_vm_dir
 
 	load_vm_settings
 
 	echo "Creating vm disk image"
-	create_vm_disk >release/vm-logs/01_vm_disk.log 2>&1
+	create_vm_disk
 
-	echo "Installing VM to disk image"
-	zpool list
-	zfs list
+	echo "Installing VM packages"
+	create_vm_dir
+
+	echo "Running post-install commands"
+	run_vm_post_install
+
+	echo "Packaging disk image"
+
+	# Unmount and cleanup
 	cleanup_md
 
-	echo "Packaging VM disk image"
+	# Rename and create checksums of files
+	NAME="vm-disk.img"
+	rm -rf release/vm
+	mkdir -p release/vm
+	mv vm-dir/${NAME} release/vm/${NAME}
+	if [ -d "${POUDRIERE_PORTDIR}/.git" ] ; then
+		GITHASH=$(git -C ${POUDRIERE_PORTDIR} log -1 --pretty=format:%h)
+	else
+		GITHASH="unknown"
+	fi
+	FILE_RENAME="$(jq -r '."vm"."file-name"' $TRUEOS_MANIFEST)"
+	if [ -n "$FILE_RENAME" -a "$FILE_RENAME" != "null" ] ; then
+		DATE="$(date +%Y%m%d)"
+		FILE_RENAME=$(echo $FILE_RENAME | sed "s|%%DATE%%|$DATE|g" | sed "s|%%GITHASH%%|$GITHASH|g" | sed "s|%%TRUEOS_VERSION%%|$TRUEOS_VERSION|g")
+		echo "Renaming ${NAME} -> ${FILE_RENAME}.img"
+		mv release/vm/${NAME} release/vm/${FILE_RENAME}.img
+		NAME="${FILE_RENAME}.img"
+	fi
+	echo "Creating checksums"
+	sha256 -q release/vm/${NAME} > release/vm/${NAME}.sha256
+	md5 -q release/vm/${NAME} > release/vm/${NAME}.md5
 }
 
 do_iso_create() {
