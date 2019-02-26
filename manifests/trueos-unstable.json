@@ -17,7 +17,6 @@
 			"default": [
 				"os/userland",
 				"os/userland-lib32",
-				"os/docs",
 				"os/kernel",
 				"security/sudo",
 				"sysutils/tmux",

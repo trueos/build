@@ -16,7 +16,6 @@
 		"auto-install-packages": {
 			"default": [
 				"os/userland",
-				"os/docs",
 				"os/kernel",
 				"security/sudo",
 				"sysutils/ipmitool",
