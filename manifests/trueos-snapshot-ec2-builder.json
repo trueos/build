@@ -19,6 +19,7 @@
 				"devel/git-lite",
 				"editors/vim-console",
 				"java/openjdk8",
+				"lang/python2",
 				"lang/python3",
 				"net/bsdec2-image-upload",
 				"net/rsync",
