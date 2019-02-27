@@ -1075,7 +1075,7 @@ create_vm_dir()
 	mkdir -p ${VMDIR}/var/db/pkg
 	cp -r tmp/repo-config ${VMDIR}/tmp/repo-config
 
-	export PKG_DBDIR="/var/db/pkg"
+	export PKG_DBDIR="tmp/pkgdb"
 
 	# Install the base packages into vm dir
 	for pkg in ${BASE_PACKAGES}
@@ -1110,6 +1110,8 @@ create_vm_dir()
 		done
 	done
 	unset PKG_DBDIR
+	mv ${VMDIR}/tmp/pkgdb/* ${VMDIR}/var/db/pkg/
+	rmdir ${VMDIR}/tmp/pkgdb
 }
 
 run_vm_post_install() {
