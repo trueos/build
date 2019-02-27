@@ -77,8 +77,11 @@ POUDRIERED_DIR=/usr/local/etc/poudriere.d
 
 # Temp location for ISO files
 ISODIR="tmp/iso"
-# Validate that we have a good TRUEOS_MANIFEST and sane build environment
 
+# Temp pool name to use for VM creation
+VMPOOLNAME="${VMPOOLNAME:-vm-gen-pool}"
+
+# Validate that we have a good TRUEOS_MANIFEST and sane build environment
 env_check()
 {
 	echo "Using TRUEOS_MANIFEST: $TRUEOS_MANIFEST" >&2
@@ -998,6 +1001,225 @@ select_manifest()
 	echo "$MANIFEST" > .config/manifest
 }
 
+load_vm_settings() {
+	# Load our VM settings
+	VMTYPE=$(jq -r '."vm"."type"' ${TRUEOS_MANIFEST} 2>/dev/null)
+	VMSIZE=$(jq -r '."vm"."size"' ${TRUEOS_MANIFEST} 2>/dev/null)
+	VMCFG=$(jq -r '."vm"."disk-config"' ${TRUEOS_MANIFEST} 2>/dev/null)
+	if [ ! -e "vm-diskcfg/${VMCFG}.sh" ] ; then
+		exit_err "Missing cfg: vm-diskcfg/${VMCFG}.sh"
+	fi
+	VMBOOT=$(jq -r '."vm"."boot"' ${TRUEOS_MANIFEST} 2>/dev/null)
+	case $VMBOOT in
+		ufs) ;;
+		zfs) ;;
+		*) exit_err "Unknown vm.boot option!" ;;
+	esac
+}
+
+cleanup_md() {
+	if [ ! -e "/dev/${MDDEV}" ] ; then
+		return 0
+	fi
+	zpool export ${VMPOOLNAME}
+	mdconfig -d -u ${MDDEV}
+}
+
+# Build a VM disk image based upon specifications in JSON manifest
+create_vm_disk() {
+
+	truncate -s $VMSIZE vm-dir/vm-disk.img
+	if [ $? -ne 0 ] ; then
+		exit_err "Failed truncating vm disk image"
+	fi
+
+	export MDDEV=$(mdconfig -a -t vnode -f vm-dir/vm-disk.img)
+	if [ ! -e "/dev/${MDDEV}" ] ; then
+		exit_err "Failed mdconfig of vm-disk.img"
+	fi
+
+	trap cleanup_md SIGPIPE
+	trap cleanup_md SIGINT
+	trap cleanup_md SIGTERM
+	trap cleanup_md EXIT
+
+	sh vm-diskcfg/${VMCFG}.sh ${MDDEV} ${VMPOOLNAME}
+	if [ $? -ne 0 ] ; then
+		cleanup_md
+		exit_err "Failed setting up disk for VM image"
+	fi
+}
+
+cleanup_vm_dir() {
+
+	if [ -d "release/vm-logs" ] ; then
+		rm -rf release/vm-logs
+	fi
+	mkdir -p release/vm-logs
+
+	if [ -d "vm-dir" ] ; then
+		rm -rf vm-dir
+	fi
+	mkdir -p vm-dir
+}
+
+create_vm_dir()
+{
+	ABI=$(pkg-static -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh config ABI)
+
+	mk_repo_config
+
+	BASE_PACKAGES="os/userland os/kernel ports-mgmt/pkg textproc/jq"
+
+	mkdir -p ${VMDIR}/tmp
+	mkdir -p ${VMDIR}/var/db/pkg
+	cp -r tmp/repo-config ${VMDIR}/tmp/repo-config
+
+	export PKG_DBDIR="tmp/pkgdb"
+
+	# Install the base packages into vm dir
+	for pkg in ${BASE_PACKAGES}
+	do
+		pkg-static -r ${VMDIR} -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh \
+			-R tmp/repo-config \
+			install -y ${pkg}
+		if [ $? -ne 0 ] ; then
+			exit_err "Failed installing base packages to VM directory..."
+		fi
+
+	done
+
+	# Install the packages from JSON manifest
+	for ptype in auto-install-packages
+	do
+		for c in $(jq -r '."iso"."'${ptype}'" | keys[]' ${TRUEOS_MANIFEST} 2>/dev/null | tr -s '\n' ' ')
+		do
+			eval "CHECK=\$$c"
+			if [ -z "$CHECK" -a "$c" != "default" ] ; then continue; fi
+			for i in $(jq -r '."iso"."'${ptype}'"."'$c'" | join(" ")' ${TRUEOS_MANIFEST})
+			do
+				if [ -z "${i}" ] ; then continue; fi
+				echo "Installing: $i"
+				pkg-static -r ${VMDIR} -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh \
+					-R tmp/repo-config \
+					install -y ${i}
+				if [ $? -ne 0 ] ; then
+					exit_err "Failed installing $i to VM..."
+				fi
+			done
+		done
+	done
+	unset PKG_DBDIR
+	mv ${VMDIR}/tmp/pkgdb/* ${VMDIR}/var/db/pkg/
+	rmdir ${VMDIR}/tmp/pkgdb
+}
+
+run_vm_post_install() {
+	# Stamp the boot-loader
+	case ${VMBOOT} in
+		ufs)
+			echo "Stamping UFS boot-loader"
+			echo "gpart bootcode -b ${VMDIR}/boot/pmbr -p ${VMDIR}/boot/gptboot -i 1 ${MDDEV}"
+			gpart bootcode -b ${VMDIR}/boot/pmbr -p ${VMDIR}/boot/gptboot -i 1 ${MDDEV} || exit_err "failed stamping boot!"
+			;;
+		zfs) 
+			echo "Stamping ZFS boot-loader"
+			echo "gpart bootcode -b ${VMDIR}/boot/pmbr -p ${VMDIR}/boot/gptzfsboot -i 1 ${MDDEV}"
+			gpart bootcode -b ${VMDIR}/boot/pmbr -p ${VMDIR}/boot/gptzfsboot -i 1 ${MDDEV} || exit_err "failed stamping boot!"
+			;;
+	esac
+
+	case ${VMTYPE} in
+		ec2)
+			run_ec2_setup
+			;;
+		*)
+			echo "vm.type unset, ignoring!"
+			;;
+	esac
+
+}
+
+run_ec2_setup() {
+	# Touch a couple common files first
+	touch ${VMDIR}/etc/rc.conf
+	touch ${VMDIR}/boot/loader.conf
+
+	# Enable EC2 scripts
+	ln -s /usr/local/etc/init.d/ec2_configinit ${VMDIR}/etc/runlevels/default/ec2_configinit
+	ln -s /usr/local/etc/init.d/ec2_fetchkey ${VMDIR}/etc/runlevels/default/ec2_fetchkey
+	ln -s /usr/local/etc/init.d/ec2_loghostkey ${VMDIR}/etc/runlevels/default/ec2_loghostkey
+
+	# Enable service to grow ZFS boot volume
+	ln -s /etc/init.d/growzfs ${VMDIR}/etc/runlevels/default/growzfs
+
+	# General EC2 setup
+	sysrc -f ${VMDIR}/etc/rc.conf ec2_fetchkey_user=root
+	sysrc -f ${VMDIR}/etc/rc.conf ifconfig_DEFAULT=ALL
+	sysrc -f ${VMDIR}/etc/rc.conf synchronous_dhclient=YES
+	sysrc -f ${VMDIR}/boot/loader.conf if_ena_load=YES
+	sysrc -f ${VMDIR}/boot/loader.conf autoboot_delay="-1"
+	sysrc -f ${VMDIR}/boot/loader.conf beastie_disable=YES
+	sysrc -f ${VMDIR}/boot/loader.conf boot_multicons=YES
+
+	# Disable keyboard / mouse
+	echo "hint.atkbd.0.disabled=1" >> ${VMDIR}/boot/loader.conf
+	echo "hint.atkbdc.0.disabled=1" >> ${VMDIR}/boot/loader.conf
+
+	# Setup EC2 NTP server
+	sed -i '' -e 's/^pool/#pool/' -e 's/^#server.*/server 169.254.169.123 iburst/' ${VMDIR}/etc/ntp.conf
+	ln -s /etc/init.d/ntpd ${VMDIR}/etc/runlevels/default/ntpd
+
+	# Disable SSH PAM auth and enable root login
+	echo "PasswordAuthentication no" >>${VMDIR}/etc/ssh/sshd_config
+	echo "ChallengeResponseAuthentication no" >>${VMDIR}/etc/ssh/sshd_config
+	echo "PermitRootLogin yes" >>${VMDIR}/etc/ssh/sshd_config
+}
+
+do_vm_create() {
+	VMDIR="vm-mnt"
+
+	cleanup_vm_dir
+
+	load_vm_settings
+
+	echo "Creating vm disk image"
+	create_vm_disk
+
+	echo "Installing VM packages"
+	create_vm_dir
+
+	echo "Running post-install commands"
+	run_vm_post_install
+
+	echo "Packaging disk image"
+
+	# Unmount and cleanup
+	cleanup_md
+
+	# Rename and create checksums of files
+	NAME="vm-disk.img"
+	rm -rf release/vm
+	mkdir -p release/vm
+	mv vm-dir/${NAME} release/vm/${NAME}
+	if [ -d "${POUDRIERE_PORTDIR}/.git" ] ; then
+		GITHASH=$(git -C ${POUDRIERE_PORTDIR} log -1 --pretty=format:%h)
+	else
+		GITHASH="unknown"
+	fi
+	FILE_RENAME="$(jq -r '."vm"."file-name"' $TRUEOS_MANIFEST)"
+	if [ -n "$FILE_RENAME" -a "$FILE_RENAME" != "null" ] ; then
+		DATE="$(date +%Y%m%d)"
+		FILE_RENAME=$(echo $FILE_RENAME | sed "s|%%DATE%%|$DATE|g" | sed "s|%%GITHASH%%|$GITHASH|g" | sed "s|%%TRUEOS_VERSION%%|$TRUEOS_VERSION|g")
+		echo "Renaming ${NAME} -> ${FILE_RENAME}.img"
+		mv release/vm/${NAME} release/vm/${FILE_RENAME}.img
+		NAME="${FILE_RENAME}.img"
+	fi
+	echo "Creating checksums"
+	sha256 -q release/vm/${NAME} > release/vm/${NAME}.sha256
+	md5 -q release/vm/${NAME} > release/vm/${NAME}.md5
+}
+
 do_iso_create() {
 	if [ -d "release/iso-logs" ] ; then
 		rm -rf release/iso-logs
@@ -1045,6 +1267,9 @@ case $1 in
 		   ;;
 	iso) env_check
 	     do_iso_create
+	     ;;
+	 vm) env_check
+	     do_vm_create
 	     ;;
 	check)  env_check
 		check_build_environment
