@@ -15,9 +15,11 @@
 	"iso": {
 		"auto-install-packages": {
 			"default": [
+				"devel/gmake",
 				"devel/git-lite",
 				"editors/vim-console",
 				"java/openjdk8",
+				"lang/python3",
 				"net/bsdec2-image-upload",
 				"net/rsync",
 				"os/userland",
@@ -31,7 +33,8 @@
 				"sysutils/ec2-scripts",
 				"sysutils/sysup",
 				"textproc/jq",
-				"www/nginx"
+				"www/nginx",
+				"www/yarn"
 			]
 		},
 		"auto-install-script": "",
