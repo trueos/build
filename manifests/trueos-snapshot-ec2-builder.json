@@ -45,76 +45,7 @@
 		},
 		"overlay": {
 		},
-		"post-install-commands": [
-			{
-				"chroot":true,
-				"command":"ln -s /usr/local/etc/init.d/ec2_configinit /etc/runlevels/default/ec2_configinit"
-			},
-			{
-				"chroot":true,
-				"command":"ln -s /usr/local/etc/init.d/ec2_fetchkey /etc/runlevels/default/ec2_fetchkey"
-			},
-			{
-				"chroot":true,
-				"command":"ln -s /usr/local/etc/init.d/ec2_loghostkey /etc/runlevels/default/ec2_loghostkey"
-			},
-			{
-				"chroot":true,
-				"command":"ln -s /etc/init.d/ntpd /etc/runlevels/default/ntpd"
-			},
-			{
-				"chroot":true,
-				"command":"sysrc -f /etc/rc.conf ec2_fetchkey_user=root"
-			},
-			{
-				"chroot":true,
-				"command":"sysrc -f /etc/rc.conf ifconfig_DEFAULT=\"ALL\""
-			},
-			{
-				"chroot":true,
-				"command":"sysrc -f /etc/rc.conf synchronous_dhclient=YES"
-			},
-			{
-				"chroot":true,
-				"command":"sysrc -f /boot/loader.conf if_ena_load=YES"
-			},
-			{
-				"chroot":true,
-				"command":"sysrc -f /boot/loader.conf autoboot_delay=\"-1\""
-			},
-			{
-				"chroot":true,
-				"command":"sysrc -f /boot/loader.conf beastie_disable=\"YES\""
-			},
-			{
-				"chroot":true,
-				"command":"echo 'hint.atkbd.0.disabled=1' >> /boot/loader.conf"
-			},
-			{
-				"chroot":true,
-				"command":"echo 'hint.atkbdc.0.disabled=1' >> /boot/loader.conf"
-			},
-			{
-				"chroot":true,
-				"command":"sysrc -f /boot/loader.conf boot_multicons=\"YES\""
-			},
-			{
-				"chroot":true,
-				"command":"sed -i '' -e 's/^pool/#pool/' -e 's/^#server.*/server 169.254.169.123 iburst/' /etc/ntp.conf"
-			},
-			{
-				"chroot":true,
-				"command":"echo \"PasswordAuthentication no\" >>/etc/ssh/sshd_config"
-			},
-			{
-				"chroot":true,
-				"command":"echo \"ChallengeResponseAuthentication no\" >>/etc/ssh/sshd_config"
-			},
-			{
-				"chroot":true,
-				"command":"echo \"PermitRootLogin yes\" >>/etc/ssh/sshd_config"
-			}
-		],
+		"post-install-commands": [],
 		"prune": {
 			"default": [
 				"METALOG",
@@ -181,6 +112,7 @@
 	"version": "1.1",
 	"vm": {
 		"size":"3G",
+		"type":"ec2",
 		"file-name": "TrueOS-Snapshot-EC2-x64-%%GITHASH%%-%%DATE%%",
 		"disk-config":"zfs-noswap",
 		"boot":"zfs"

@@ -1003,6 +1003,7 @@ select_manifest()
 
 load_vm_settings() {
 	# Load our VM settings
+	VMTYPE=$(jq -r '."vm"."type"' ${TRUEOS_MANIFEST} 2>/dev/null)
 	VMSIZE=$(jq -r '."vm"."size"' ${TRUEOS_MANIFEST} 2>/dev/null)
 	VMCFG=$(jq -r '."vm"."disk-config"' ${TRUEOS_MANIFEST} 2>/dev/null)
 	if [ ! -e "vm-diskcfg/${VMCFG}.sh" ] ; then
@@ -1126,29 +1127,51 @@ run_vm_post_install() {
 			;;
 	esac
 
+	case ${VMTYPE} in
+		ec2)
+			run_ec2_setup
+			;;
+		*)
+			echo "vm.type unset, ignoring!"
+			;;
+	esac
+
+}
+
+run_ec2_setup() {
 	# Touch a couple common files first
 	touch ${VMDIR}/etc/rc.conf
 	touch ${VMDIR}/boot/loader.conf
 
-	# Loop through and run post-install commands
-	jq -r '."iso"."post-install-commands"' ${TRUEOS_MANIFEST} > tmp/cmd.json
-	CMDLEN=$(jq -r '. | length' tmp/cmd.json)
-	if [ $CMDLEN -gt 0 ] ; then
-		i=0
-		while [ $i -lt $CMDLEN ]
-		do
-			internal=$(cat tmp/cmd.json | jq -r ".[${i}]" | jq -r '."chroot"')
-			cmd=$(cat tmp/cmd.json | jq -r ".[${i}]" | jq -r '."command"')
-			if [ "$internal" = "true" ] ; then
-				echo "$cmd" >${VMDIR}/.runcmd.sh
-				chroot ${VMDIR} sh /.runcmd.sh || exit_err "Failed running $cmd"
-				rm ${VMDIR}/.runcmd.sh
-			else
-				echo "Skipping external command"
-			fi
-			i=$(expr $i + 1)
-		done
-	fi
+	# Enable EC2 scripts
+	ln -s /usr/local/etc/init.d/ec2_configinit ${VMDIR}/etc/runlevels/default/ec2_configinit
+	ln -s /usr/local/etc/init.d/ec2_fetchkey ${VMDIR}/etc/runlevels/default/ec2_fetchkey
+	ln -s /usr/local/etc/init.d/ec2_loghostkey ${VMDIR}/etc/runlevels/default/ec2_loghostkey
+
+	# Enable service to grow ZFS boot volume
+	ln -s /etc/init.d/growzfs ${VMDIR}/etc/runlevels/default/growzfs
+
+	# General EC2 setup
+	sysrc -f ${VMDIR}/etc/rc.conf ec2_fetchkey_user=root
+	sysrc -f ${VMDIR}/etc/rc.conf ifconfig_DEFAULT=ALL
+	sysrc -f ${VMDIR}/etc/rc.conf synchronous_dhclient=YES
+	sysrc -f ${VMDIR}/boot/loader.conf if_ena_load=YES
+	sysrc -f ${VMDIR}/boot/loader.conf autoboot_delay="-1"
+	sysrc -f ${VMDIR}/boot/loader.conf beastie_disable=YES
+	sysrc -f ${VMDIR}/boot/loader.conf boot_multicons=YES
+
+	# Disable keyboard / mouse
+	echo 'hint.atkbd.0.disabled=1' >> ${VMDIR}/boot/loader.conf
+	echo 'hint.atkbdc.0.disabled=1' >> ${VMDIR}/boot/loader.conf
+
+	# Setup EC2 NTP server
+	sed -i '' -e 's/^pool/#pool/' -e 's/^#server.*/server 169.254.169.123 iburst/' ${VMDIR}/etc/ntp.conf
+	ln -s /etc/init.d/ntpd ${VMDIR}/etc/runlevels/default/ntpd
+
+	# Disable SSH PAM auth and enable root login
+	echo \"PasswordAuthentication no\" >>${VMDIR}/etc/ssh/sshd_config
+	echo \"ChallengeResponseAuthentication no\" >>${VMDIR}/etc/ssh/sshd_config
+	echo \"PermitRootLogin yes\" >>${VMDIR}/etc/ssh/sshd_config
 }
 
 do_vm_create() {
