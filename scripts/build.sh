@@ -1161,17 +1161,17 @@ run_ec2_setup() {
 	sysrc -f ${VMDIR}/boot/loader.conf boot_multicons=YES
 
 	# Disable keyboard / mouse
-	echo 'hint.atkbd.0.disabled=1' >> ${VMDIR}/boot/loader.conf
-	echo 'hint.atkbdc.0.disabled=1' >> ${VMDIR}/boot/loader.conf
+	echo "hint.atkbd.0.disabled=1" >> ${VMDIR}/boot/loader.conf
+	echo "hint.atkbdc.0.disabled=1" >> ${VMDIR}/boot/loader.conf
 
 	# Setup EC2 NTP server
 	sed -i '' -e 's/^pool/#pool/' -e 's/^#server.*/server 169.254.169.123 iburst/' ${VMDIR}/etc/ntp.conf
 	ln -s /etc/init.d/ntpd ${VMDIR}/etc/runlevels/default/ntpd
 
 	# Disable SSH PAM auth and enable root login
-	echo \"PasswordAuthentication no\" >>${VMDIR}/etc/ssh/sshd_config
-	echo \"ChallengeResponseAuthentication no\" >>${VMDIR}/etc/ssh/sshd_config
-	echo \"PermitRootLogin yes\" >>${VMDIR}/etc/ssh/sshd_config
+	echo "PasswordAuthentication no" >>${VMDIR}/etc/ssh/sshd_config
+	echo "ChallengeResponseAuthentication no" >>${VMDIR}/etc/ssh/sshd_config
+	echo "PermitRootLogin yes" >>${VMDIR}/etc/ssh/sshd_config
 }
 
 do_vm_create() {
