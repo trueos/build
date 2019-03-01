@@ -37,7 +37,7 @@ pipeline {
         sh 'make ports'
       }
     }
-    stage('ISO') {
+    stage('VM') {
       post {
         always {
           archiveArtifacts artifacts: 'release/iso-logs/**', fingerprint: true
@@ -48,7 +48,7 @@ pipeline {
 	 TRUEOS_MANIFEST="${env.WORKSPACE}/manifests/trueos-snapshot-ec2-builder.json"
       }
       steps {
-        sh 'make iso'
+        sh 'make vm'
       }
     }
     stage('Publish') {
@@ -57,7 +57,7 @@ pipeline {
           sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null syncbot@pkg.trueos.org mkdir -p /data/pkg/snapshot-ec2/FreeBSD:13:amd64/latest || true'
           sh 'cd release/packages && rsync -av --delete-after --delay-updates -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" . syncbot@pkg.trueos.org:/data/pkg/snapshot-ec2/FreeBSD:13:amd64/latest/'
           sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null syncbot@pkg.trueos.org mkdir -p /data/iso/snapshot-ec2/ || true'
-          sh 'rsync -av --delete-after --delay-updates -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" release/iso/ syncbot@pkg.trueos.org:/data/iso/snapshot-ec2/'
+          sh 'rsync -av --delete-after --delay-updates -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" release/vm/ syncbot@pkg.trueos.org:/data/iso/snapshot-ec2/'
         }
       }
     }
