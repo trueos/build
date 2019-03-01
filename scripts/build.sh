@@ -176,7 +176,7 @@ setup_poudriere_conf()
 	if [ -e "/etc/poudriere.conf.release" ] ; then
 		cat /etc/poudriere.conf.release >> ${_pdconf}
 	fi
-	cp ${_pdconf} ${_pdconf2}
+	cp ${_pdconf} ${_pdconf2} 2>/dev/null
 
 	# Set the TRUEOS_MANIFEST location for os/* build ports
 	echo "TRUEOS_MANIFEST=${TRUEOS_MANIFEST}" > ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
