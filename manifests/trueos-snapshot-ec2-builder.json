@@ -17,6 +17,7 @@
 			"default": [
 				"devel/gmake",
 				"devel/git-lite",
+				"devel/hub",
 				"editors/vim-console",
 				"java/openjdk8",
 				"lang/python2",
