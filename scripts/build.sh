@@ -1050,7 +1050,7 @@ create_vm_disk() {
 	fi
 }
 
-cleanup_vm_dir() {
+clean_vm_dir() {
 
 	if [ -d "release/vm-logs" ] ; then
 		rm -rf release/vm-logs
@@ -1179,7 +1179,7 @@ run_ec2_setup() {
 do_vm_create() {
 	VMDIR="vm-mnt"
 
-	cleanup_vm_dir
+	clean_vm_dir
 
 	load_vm_settings
 
@@ -1259,6 +1259,7 @@ case $1 in
 	clean) env_check
 	       clean_jails
 	       clean_iso_dir
+	       clean_vm_dir
 	       exit 0
 	       ;;
 	poudriere) env_check
