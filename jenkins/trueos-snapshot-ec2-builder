@@ -40,7 +40,7 @@ pipeline {
     stage('VM') {
       post {
         always {
-          archiveArtifacts artifacts: 'release/iso-logs/**', fingerprint: true
+          archiveArtifacts artifacts: 'release/vm-logs/**', fingerprint: true
         }
       }
       environment {
