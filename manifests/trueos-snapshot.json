@@ -104,7 +104,10 @@
 		"make.conf": {
 			"default": [
 				"java_openjdk8_UNSET+=ALSA",
-				"java_openjdk8_UNSET+=X11"
+				"java_openjdk8_UNSET+=X11",
+				"os_buildkernel_UNSET+=ZFS",
+				"os_buildworld_UNSET+=ZFS",
+				"os_userland_SET+=ZOL"
 			]
 		},
 		"type": "git",
