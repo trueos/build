@@ -38,11 +38,6 @@ pipeline {
       }
     }
     stage('VM') {
-      post {
-        always {
-          archiveArtifacts artifacts: 'release/vm-logs/**', fingerprint: true
-        }
-      }
       environment {
          SIGNING_KEY = credentials('a50f9ddd-1460-4951-a304-ddbf6f2f7990')
 	 TRUEOS_MANIFEST="${env.WORKSPACE}/manifests/trueos-snapshot-ec2-builder.json"
