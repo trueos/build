@@ -627,25 +627,30 @@ clean_iso_dir()
 
 create_iso_dir()
 {
-	ABI=$(pkg-static -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh config ABI)
-	PKG_DISTDIR="${ISODIR}/dist/${ABI}/latest"
 	clean_iso_dir
 
 	mk_repo_config
 
+	ABI=$(pkg-static -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh config ABI)
+	PKG_DISTDIR="${ISODIR}/dist/${ABI}/latest"
 	mkdir -p "${PKG_DISTDIR}"
 
-	BASE_PACKAGES="userland kernel pkg jq"
+	mkdir -p ${ISODIR}/tmp
+	mkdir -p ${ISODIR}/var/db/pkg
+	cp -r tmp/repo-config ${ISODIR}/tmp/repo-config
 
-	# Install the base packages into ISODIR
+	export PKG_DBDIR="tmp/pkgdb"
+
+	BASE_PACKAGES="os/userland os/kernel ports-mgmt/pkg textproc/jq"
+
+	# Install the base packages into iso dir
 	for pkg in ${BASE_PACKAGES}
 	do
-		pkgFile=$(ls ${POUDRIERE_PKGDIR}/All/${pkg}-[0-9]*.txz)
 		pkg-static -r ${ISODIR} -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh \
 			-R tmp/repo-config \
-			add ${pkgFile}
+			install -y ${pkg}
 		if [ $? -ne 0 ] ; then
-			exit_err "Failed installing base packages to ISO..."
+			exit_err "Failed installing base packages to ISO directory..."
 		fi
 
 	done
@@ -708,6 +713,12 @@ create_iso_dir()
 	if [ -n "${_missingpkgs}" ] ; then
 	  echo "WARNING: Optional Packages not available for ISO: ${_missingpkgs}"
 	fi
+
+	# Cleanup and move the updated pkgdb
+	unset PKG_DBDIR
+	mv ${VMDIR}/tmp/pkgdb/* ${VMDIR}/var/db/pkg/
+	rmdir ${VMDIR}/tmp/pkgdb
+
 	# Create the repo DB
 	echo "Creating installer pkg repo"
 	pkg-static repo ${PKG_DISTDIR} ${SIGNING_KEY}
