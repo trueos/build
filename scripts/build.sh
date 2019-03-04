@@ -342,12 +342,14 @@ is_jail_dirty()
 	newOpt=$(get_world_flags | tr -d ' ' | md5)
 	oldOpt=$(cat ${POUDRIERE_PKGDIR}/buildworld.options | md5)
 	if [ "${newOpt}" != "${oldOpt}" ] ;then
+		echo "New world flags detected!"
 		return 1
 	fi
 	# Have the kernel options changed?
 	newOpt=$(get_kernel_flags | tr -d ' ' | md5)
 	oldOpt=$(cat ${POUDRIERE_PKGDIR}/buildkernel.options | md5)
 	if [ "${newOpt}" != "${oldOpt}" ] ;then
+		echo "New kernel flags detected!"
 		return 1
 	fi
 
@@ -355,6 +357,7 @@ is_jail_dirty()
 	newOpt=$(get_os_port_flags | tr -d ' ' | md5)
 	oldOpt=$(cat ${POUDRIERE_PKGDIR}/osport.options | md5)
 	if [ "${newOpt}" != "${oldOpt}" ] ;then
+		echo "New os_ options detected!"
 		return 1
 	fi
 
