@@ -390,6 +390,15 @@ setup_poudriere_jail()
 	# Clean out old logs
 	rm ${POUDRIERE_LOGDIR}/base-ports/*
 
+	# Make sure local port options are gone for os/buildworld and os/buildkernel
+	# These conflict with options passed in via __MAKE_CONF
+	if [ -d "/var/db/ports/os_buildworld" ] ; then
+		rm -rf /var/db/ports/os_buildworld
+	fi
+	if [ -d "/var/db/ports/os_buildkernel" ] ; then
+		rm -rf /var/db/ports/os_buildkernel
+	fi
+
 	export KERNEL_MAKE_FLAGS="$(get_kernel_flags)"
 	export WORLD_MAKE_FLAGS="$(get_world_flags)"
 	poudriere jail -c -j $POUDRIERE_BASE -m ports=${POUDRIERE_PORTS} -v ${TRUEOS_VERSION}
