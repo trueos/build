@@ -111,7 +111,7 @@
       "default": [
         "MALLOC_PRODUCTION=YES",
 	"os_buildkernel_UNSET+=ZFS",
-	"os_buildworld_UNSET+=ZFS"
+	"os_buildworld_UNSET+=ZFS",
 	"os_userland_SET+=ZOL"
       ]
     },
