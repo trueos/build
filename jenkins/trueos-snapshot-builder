@@ -11,8 +11,8 @@ pipeline {
   environment {
     GH_ORG = 'trueos'
     GH_REPO = 'trueos'
-    POUDRIERE_BASE = 'trueos-snap-base'
-    POUDRIERE_PORTS = 'trueos-snap-ports'
+    POUDRIERE_BASE = 'trueos-snap-build-base'
+    POUDRIERE_PORTS = 'trueos-snap-build-ports'
     TRUEOS_VERSION = '13.0'
   }
 
@@ -31,7 +31,7 @@ pipeline {
       }
       environment {
          SIGNING_KEY = credentials('a50f9ddd-1460-4951-a304-ddbf6f2f7990')
-	 TRUEOS_MANIFEST="${env.WORKSPACE}/manifests/trueos-snapshot.json"
+	 TRUEOS_MANIFEST="${env.WORKSPACE}/manifests/trueos-snapshot-builder.json"
       }
       steps {
         sh 'make ports'
@@ -45,7 +45,7 @@ pipeline {
       }
       environment {
          SIGNING_KEY = credentials('a50f9ddd-1460-4951-a304-ddbf6f2f7990')
-	 TRUEOS_MANIFEST="${env.WORKSPACE}/manifests/trueos-snapshot.json"
+	 TRUEOS_MANIFEST="${env.WORKSPACE}/manifests/trueos-snapshot-builder.json"
       }
       steps {
         sh 'make iso'

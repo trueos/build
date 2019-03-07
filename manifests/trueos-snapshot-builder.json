@@ -30,7 +30,7 @@
 		"dist-packages": {
 			"default": []
 		},
-		"file-name": "TrueOS-Snapshot-x64-%%GITHASH%%-%%DATE%%",
+		"file-name": "TrueOS-Snapshot-Builder-x64-%%GITHASH%%-%%DATE%%",
 		"install-script": "",
 		"iso-packages": {
 			"default": []
