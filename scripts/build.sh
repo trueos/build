@@ -238,7 +238,7 @@ setup_poudriere_ports()
 	fi
 
 	# Do we have any locally checked out sources to copy into poudirere jail?
-	LOCAL_SOURCE_DIR=source
+	LOCAL_SOURCE_DIR=${LOCAL_SOURCE_DIR:-source}
 	if [ -n "$LOCAL_SOURCE_DIR" -a -d "${LOCAL_SOURCE_DIR}" ] ; then
 		rm -rf ${POUDRIERE_PORTDIR}/local_source 2>/dev/null
 		cp -a ${LOCAL_SOURCE_DIR} ${POUDRIERE_PORTDIR}/local_source
