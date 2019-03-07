@@ -111,7 +111,8 @@
 		"url": "https://github.com/trueos/trueos-ports"
 	},
 	"poudriere-conf": [
-		"ALLOW_MAKE_JOBS_PACKAGES=\"openjdk8* llvm* mpfr*\""
+		"ALLOW_MAKE_JOBS_PACKAGES=\"openjdk8* llvm* mpfr*\"",
+		"BUILD_AS_NON_ROOT=no"
 	],
 	"version": "1.1"
 }
