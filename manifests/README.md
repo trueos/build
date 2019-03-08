@@ -72,7 +72,7 @@ The "iso" target within the manifest controls all the options specific to creati
 * **install-script** (string): Tool to automatically launch when booting the ISO (default: `pc-sysinstaller`)
 * **auto-install-script** (string): Path to config file for `pc-sysinstall` to perform an unattended installation.
 * **post-install-commands** (JSON array of objects) : Additional commands to run after an installation with pc-sysinstaller (not used for custom install scripts).
-   * **chroot** (boolian) : Run command within the newly-installed system (true) or on the ISO itself (false)
+   * **chroot** (boolean) : Run command within the newly-installed system (true) or on the ISO itself (false)
    * **command** (string) : Command to run
 * **prune** (JSON object) : Lists of files or directories to remove from the ISO
    * **default** (JSON array of strings) : Default list (required)
@@ -80,7 +80,7 @@ The "iso" target within the manifest controls all the options specific to creati
 * **dist-packages** (JSON object) : Lists of packages (by port origin) to have available in .txz form on the ISO
    * **default** (JSON array of strings) : Default list (required)
    * **ENV_VARIABLE** (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name exists.
-* **offline-update** (boolian) : If set to true will generate a system-update.img file containing ISOs dist files
+* **offline-update** (boolean) : If set to true will generate a system-update.img file containing ISOs dist files
 * **optional-dist-packages** (JSON object) : Lists of packages (by port origin) to have available in .txz form on the ISO. These ones are considered "optional" and may or may not be included depending on whether the package built successfully.
    * **default** (JSON array of strings) : Default list (required)
    * **ENV_VARIABLE** (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name exists.
@@ -215,7 +215,7 @@ The "ports" target allows for configuring the build targets and options for the 
 * **branch** (string) : Branch of the repository to use (svn/git only)
 * **url** (string) : URL to the repository (svn/git), where to fetch the tar file (tar), or path to directory (local)
 * **local_source** (string) : Path to a local directory where the ports tree should be placed (used for reproducible builds). This directory name will be visible in the output of `uname` on installed systems.
-* **build-all** (boolian) : Build the entire ports collection (true/false)
+* **build-all** (boolean) : Build the entire ports collection (true/false)
 * **build** (JSON object) : Lists of packages (by port origin) to build. If "build-all" is true, then this list will be treated as "essential" packages and if any of them fail to build properly then the entire build will be flagged as a failure.
    * **default** (JSON array of strings) : Default list (required)
    * **ENV_VARIABLE** (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name is set
