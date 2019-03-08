@@ -25,27 +25,16 @@ The "base-packages" target allows the configuration of the OS packages itself. T
 
 
 #### Base Packages Options
-* **name-prefix** (string) : Naming convention for the base packages (Example: FreeBSD-runtime will become [name-prefix]-runtime)
-* **depends** (JSON object) : This is a object containing declarations of additional dependencies that you would like to add to particular base packages: The next level of the object is the name of the base package, then within that object is the name of the package you want to add as a dependency, and within that is the origin and version of the package that is needed. See the example below for a working demonstration of this dependency injection.
-   * **WARNING:** Make sure that only simple ports/packages are injected with this mechanism! Example: The runtime package installs the user/groups files on the system, so adding a dependency on a package that needs to create a user/group will cause install failures since the dependency is installed before the runtime package.
 * **kernel-flags** and **world-flags** (JSON object) : These are objects containing extra builds flags that will be used for the kernel/world build stages. 
-   * **default** (JSON array of strings) : Default list of build flags (required)
+   * **default** (JSON array of strings) : Default list of build flags (required if the object is defined)
    * **ENV_VARIABLE** (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name exists.
+   * ***WARNING:*** The only kernel flag that should be optionally set here is the "KERNCONF" setting for selecting a custom kernel configuration. All other world/kernel options are exposed via port options on the "buildworld" and "buildkernel" ports and should be modified in the "ports -> make.conf" section of the manifest.
 * **strip-plist** (JSON array of strings) :  List of directories or files that need to be removed from the base-packages.
 
 #### Base Packages Example
 ```
 "base-packages" : {
-  "name-prefix" : "TrueOS",
-  "depends" : {
-    "runtime": {
-      "uclcmd": {
-        "origin": "devel/uclcmd",
-        "version": ">0"
-      }
-    }
-  },
-  "kernel-flags": {
+  "world-flags": {
     "default": [
       "WITH_FOO=1",
       "WITH_BAR=2"
@@ -55,7 +44,7 @@ The "base-packages" target allows the configuration of the OS packages itself. T
       "WITHOUT_FOOBAR2=1"
     ]
   },
-  "world-flags": {
+  "kernel-flags": {
     "default": [
       "WITH_FOO=1",
       "WITH_BAR=2"
@@ -77,9 +66,9 @@ The "iso" target within the manifest controls all the options specific to creati
 
 #### ISO Options
 * **file-name** (string): Template for the generation of the ISO filename. There are a few format options which can be auto-populated:
-   * **%%TRUEOS_VERSION%%** : Replace this field with the value of the TRUEOS_VERSION environment variable.
-   * **%%GITHASH%%** : (Requires sources to be cloned with git) Replace this field with the hash of the latest git commit.
-   * **%%DATE%%** : Replace this field with the date that the ISO was generated (YYYYMMDD)'
+   * "%%TRUEOS_VERSION%%" : Replace this field with the value of the TRUEOS_VERSION environment variable.
+   * "%%GITHASH%%" : (Requires sources to be cloned with git) Replace this field with the hash of the latest git commit.
+   * "%%DATE%%" : Replace this field with the date that the ISO was generated (YYYYMMDD)'
 * **install-script** (string): Tool to automatically launch when booting the ISO (default: `pc-sysinstaller`)
 * **auto-install-script** (string): Path to config file for `pc-sysinstall` to perform an unattended installation.
 * **post-install-commands** (JSON array of objects) : Additional commands to run after an installation with pc-sysinstaller (not used for custom install scripts).
@@ -304,15 +293,15 @@ PRIORITY_BOOST="pypy* openoffice* iridium* chromium*"
 ```
 
 ### pkg-repo
-As part of the build process, the packages can also be automatically assembled into a full package repository which may be used for providing access to the newly-build packages on other systems.
+This section determines the default package repository configuration for the installed system.
 
 #### pkg-repo Options
 * **pkg-repo-name** (string) : Short-name for the package repository (default: "TrueOS")
 * **pkg-train-name** (string) : Name for the package repository train used by sysutils/sysup (default: "TrueOS")
-* **pkg-repo** (JSON Object) : Settings for the unified base+ports package repo
+* **pkg-repo** (JSON Object) : Settings for the package repository
    * **url** (string) : Public URL where the repository can be found. (Distro creators will need to setup access for this URL and copy the pkg repo files as needed to make them available at the given location).
    * **pubKey** (JSON Array of strings) : SSL public key to use when verifying integrity of downloaded packages (one line of test per item in the array). This is basically just the plain-text of the SSL public key file converted into an array of strings. 
-      * **WARNING** Make sure that this public key is the complement to the private key that you are using to sign the packages!!
+      * **WARNING** Make sure that this public key is the complement to the private key which is used to sign the packages!!
    
 #### pkg-repo Example
 
@@ -329,4 +318,5 @@ As part of the build process, the packages can also be automatically assembled i
 }
 ```
 
+---
 *This documentation was provided by Ken Moore from the [Project Trident](https://project-trident.org) distribution of TrueOS*
