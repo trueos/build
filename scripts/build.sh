@@ -86,6 +86,9 @@ env_check()
 {
 	echo "Using TRUEOS_MANIFEST: $TRUEOS_MANIFEST" >&2
 	PORTS_TYPE=$(jq -r '."ports"."type"' $TRUEOS_MANIFEST)
+	if [ $? -ne 0 ] ; then
+	  exit_err "Unable to parse manifest: Check JSON syntax"
+	fi
 	PORTS_URL=$(jq -r '."ports"."url"' $TRUEOS_MANIFEST)
 	PORTS_BRANCH=$(jq -r '."ports"."branch"' $TRUEOS_MANIFEST)
 
@@ -103,6 +106,10 @@ env_check()
 		*) exit_err "Unknown or unspecified ports.type!" ;;
 	esac
 
+	/usr/bin/which -s poudriere
+	if [ $? -ne 0 ] ; then
+		exit_err "poudriere does not appear to be installed!"
+	fi
 	if [ -z "$PORTS_URL" ] && [ "${PORTS_TYPE}" != "github-overlay" ] ; then
 		exit_err "Empty ports.url!"
 	fi
@@ -153,7 +160,7 @@ setup_poudriere_conf()
 		> ${_pdconf}
 	echo "Using zpool: $ZPOOL"
 	echo "ZPOOL=$ZPOOL" >> ${_pdconf}
-	echo "Using Ports Tree: $PORTS_URL"
+	echo "Using Ports Tree: ${POUDRIERE_PORTS}"
 	echo "USE_TMPFS=yes" >> ${_pdconf}
 	echo "BASEFS=$POUDRIERE_BASEFS" >> ${_pdconf}
 	echo "ATOMIC_PACKAGE_REPOSITORY=no" >> ${_pdconf}
@@ -1015,7 +1022,7 @@ select_manifest()
 	# TODO - Replace this with "dialog" time permitting
 	echo "Please select a default MANIFEST:"
 	COUNT=0
-	for i in $(ls manifests/)
+	for i in $(ls manifests/ | grep ".json")
 	do
 		echo "$COUNT) $i"
 		COUNT=$(expr $COUNT + 1)
@@ -1027,7 +1034,7 @@ select_manifest()
 		exit_err "Invalid option!"
 	fi
 	COUNT=0
-	for i in $(ls manifests/)
+	for i in $(ls manifests/ | grep ".json")
 	do
 		if [ $COUNT -eq $tmp ] ; then
 			MANIFEST=$i
@@ -1041,6 +1048,7 @@ select_manifest()
 		mkdir .config
 	fi
 	echo "$MANIFEST" > .config/manifest
+	echo "New Default Manifest: ${MANIFEST}"
 }
 
 load_vm_settings() {

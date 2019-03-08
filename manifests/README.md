@@ -211,9 +211,19 @@ The "vm" target is used to provide custom settings when assembling a VM image wi
 The "ports" target allows for configuring the build targets and options for the ports system. That can include changing the default version for particular packages, selecting a subset of packages to build, and more.
 
 #### Ports Options
-* **type** (string) : One of the following: [git, svn, tar, local, null]. Where to look for the ports tree.
+* **type** (string) : One of the following: [git, github-overlay, svn, tar, local, null]. Where to look for the ports tree.
 * **branch** (string) : Branch of the repository to use (svn/git only)
 * **url** (string) : URL to the repository (svn/git), where to fetch the tar file (tar), or path to directory (local)
+* **github-org** (string) : (github-overlay type only) Organization to fetch from on GitHub
+* **github-repo** (string) : (github-overlay type only) Repository to fetch from the GitHub organization
+* **github-tag** (string) : (github-overlay type only) Either a branch name or a commit tag from the default branch.
+   * If a branch name is supplied, then every time the build is run it will check to see if the upstream repo/branch has changed, and update itself as needed
+   * If a commit tag is supplied, the it will grab the version of the *default branch* at the designated commit.
+* **github-overlay** (JSON array of objects) : Entries to apply various overlay(s) to the ports tree after it has been checked out.
+      * Syntax for objects within the array:
+         * "type" : (string) Either "category" (adding a new category to the ports tree) or "port" (adding a single port to the tree)
+         * "name" : (string) Category name ("mydistro") or port origin ("devel/myport") depending on the type of overlay.
+         * "local_path" : (string) path to the local directory which will be used as the overlay.
 * **local_source** (string) : Path to a local directory where the ports tree should be placed (used for reproducible builds). This directory name will be visible in the output of `uname` on installed systems.
 * **build-all** (boolian) : Build the entire ports collection (true/false)
 * **build** (JSON object) : Lists of packages (by port origin) to build. If "build-all" is true, then this list will be treated as "essential" packages and if any of them fail to build properly then the entire build will be flagged as a failure.
@@ -254,6 +264,28 @@ The "ports" target allows for configuring the build targets and options for the 
   "strip-plist":[
 	  "/usr/local/share/doc/tmux",
 	  "/usr/local/share/examples/tmux"
+  ]
+}
+```
+
+Example of how to use the "github-overlay" type of ports. All the options unrelated to the type are still valid - just not shown in this example.
+```
+"ports" : {
+  "type" : "github-overlay",
+  "github-org" : "trueos",
+  "github-repo" : "trueos-ports",
+  "github-tag" : "trueos-master",
+  "github-overlay" : [
+    {
+      "type" : "category",
+      "name" : "mydistro",
+      "local_path" : "overlay/mydistro"
+    },
+    {
+      "type" : "port",
+      "name" : "devel/myport",
+      "local_path" : "overlay/devel/myport"
+    }
   ]
 }
 ```
