@@ -28,6 +28,7 @@
 #
 
 export PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
+set -xv
 
 delete_tmp_manifest(){
 	if [ -e "${TRUEOS_MANIFEST}.orig" ] ; then
@@ -531,20 +532,11 @@ setup_poudriere_jail()
 
 	export KERNEL_MAKE_FLAGS="$(get_kernel_flags)"
 	export WORLD_MAKE_FLAGS="$(get_world_flags)"
-        if jq -r '."arch"' $TRUESOS_MANIFEST; then
-          export ARCH="$(jq -r '."arch"."arch"' $TRUEOS_MANIFEST)"
-          if jq -r '."arch"."platform"' $TRUEOS_MANIFEST ; then
-            export PLATFORM="$(jq -r '."arch"."platform"' $TRUEOS_MANIFEST)"
-          else
-            export PLATFORM="${ARCH}"
-          fi
-        else
-          export ARCH="system"
-        fi
-        if [ $ARCH == "system" ] ; then
+        export ARCHITECTURE="$(get_architecture)"
+        if [ $ARCHITECTURE == ".native" ] ; then
 	poudriere jail -c -j $POUDRIERE_BASE -m ports=${POUDRIERE_PORTS} -v ${TRUEOS_VERSION}
         else
-	poudriere jail -c -j $POUDRIERE_BASE -m ports=${POUDRIERE_PORTS} -v ${TRUEOS_VERSION} -a ${PLATFORM}.${ARCH}
+	poudriere jail -c -j $POUDRIERE_BASE -m ports=${POUDRIERE_PORTS} -v ${TRUEOS_VERSION} -a ${ARCHITECTURE}
         fi
 	if [ $? -ne 0 ] ; then
 		exit 1
@@ -1171,6 +1163,34 @@ get_os_port_flags()
 	echo "$WF"
 }
 
+get_architecture()
+{
+  if jq -e -r '."arch"' $TRUEOS_MANIFEST 2>&1 >/dev/null ; then
+    export ARCH="$(jq -r '."arch"."arch"' $TRUEOS_MANIFEST)"
+    if jq -e -r '."arch"."platform"' $TRUEOS_MANIFEST 2>&1 >/dev/null ; then
+      export PLATFORM="$(jq -r '."arch"."platform"' $TRUEOS_MANIFEST)"
+    else
+      export PLATFORM="${ARCH}"
+    fi
+  else
+    export ARCH="native"
+    export PLATFORM=""
+  fi 
+  echo $PLATFORM.$ARCH
+}
+
+get_arch()
+{
+ arch=$(echo "$(get_architecture)" | cut -d'.' -f2)
+ echo "${arch}"
+}
+
+get_platform()
+{
+ platform=$(echo "$(get_architecture)" | cut -d'.' -f1)
+ echo "${platform}"
+}
+
 get_world_flags()
 {
 	# Check if we have any world-flags to pass back
@@ -1183,6 +1203,11 @@ get_world_flags()
 			WF="$WF ${i}"
 		done
 	done
+        arch="$(get_arch)"
+        if [ "${arch}" != "native" ]; then
+          WF="$WF TARGET_ARCH=${arch}"
+          WF="$WF TARGET=$(get_platform)"
+        fi
 	echo "$WF"
 }
 
@@ -1198,6 +1223,11 @@ get_kernel_flags()
 			KF="$KF ${i}"
 		done
 	done
+        arch="$(get_arch)"
+        if [ "${arch}" != "native" ]; then
+          KF="$KF TARGET_ARCH=${arch}"
+          KF="$KF TARGET=$(get_platform)"
+        fi
 	echo "$KF"
 }
 
