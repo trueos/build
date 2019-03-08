@@ -16,7 +16,6 @@
 		"auto-install-packages": {
 			"default": [
 				"os/userland",
-				"os/userland-lib32",
 				"os/kernel",
 				"security/sudo",
 				"sysutils/tmux",
@@ -91,7 +90,10 @@
 		},
 		"build-all": true,
 		"make.conf": {
-			"default": []
+			"default": [
+				"os_userland_SET+=DOCS",
+				"os_userland_SET+=LIB32"
+			]
 		},
 		"type": "git",
 		"url": "https://github.com/trueos/trueos-ports"
