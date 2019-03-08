@@ -37,7 +37,7 @@ This command will clean up:
 
 ### make config
 This will launch an interactive prompt to select a build manifest from the example files in the [manifests directory](https://github.com/trueos/build/tree/master/manifests) and use that as the default build manifest.
-This selection will get saved to the local ".config/manifest" file and used whenever the **TRUEOS_MANIFEST** environment variable is not set. This command may be run whenever a change your default manifest is desired.
+The selected Manifest name will get saved to the local ".config/manifest" file and used whenever the **TRUEOS_MANIFEST** environment variable is not set. This command may be run whenever a different default manifest is desired.
 
 **WARNING:** If no build manifest is specified (either by running `make config` or providing the TRUEOS_MANIFEST environment variable), then the "trueos-snapshot.json" build manifest will be used automatically from the [manifests directory](https://github.com/trueos/build/tree/master/manifests).
 
