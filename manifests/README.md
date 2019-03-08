@@ -93,9 +93,6 @@ The "iso" target within the manifest controls all the options specific to creati
 * **iso-packages** (JSON object) : Lists of packages (by port origin) to install into the ISO (when booting the ISO, these packages will be available to use)
    * **default** (JSON array of strings) : Default list (required)
    * **ENV_VARIABLE** (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name exists.
-* **ignore-base-packages** (JSON array of strings) : List of base packages to ignore when installing base packages into the ISO. 
-   * This is turned into a regex automatically, so "-clang-" will remove all forms of the clang package, but "-clang-development" will only ignore the development package for clang.
-   * **WARNING** Do *NOT* ignore the "runtime" package - this will typically break the ability of the ISO to start up.
 * **auto-install-packages** (JSON object) : Lists of packages (by port origin) to automatically install when using the default TrueOS installer.
    * **NOTE:** These packages will automatically get added to the "dist-packages" available on the ISO as well.
    * **default** (JSON array of strings) : Default list (required)
@@ -139,10 +136,6 @@ The "iso" target within the manifest controls all the options specific to creati
       "/usr/local/include"
     ]
   },
-  "ignore-base-packages": [
-    "-clang-",
-    "-sendmail-"
-  ],
   "iso-packages": {
     "default": [
       "sysutils/ipmitool",
@@ -312,7 +305,7 @@ This section determines the default package repository configuration for the ins
   "url" : "http://pkg.trueos.org/pkg/release/${ABI}/latest",
   "pubKey : [
     "-----BEGIN PUBLIC KEY-----",
-    "sdigosbhdgiub+asdgilpubLIUYASVBfiGULiughlBHJljib"
+    "sdigosbhdgiub+asdgilpubLIUYASVBfiGULiughlBHJljib",
     "-----END PUBLIC KEY-----"
   ]
 }
