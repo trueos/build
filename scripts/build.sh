@@ -238,7 +238,7 @@ setup_poudriere_ports()
 	fi
 
 	# Do we have any locally checked out sources to copy into poudirere jail?
-	LOCAL_SOURCE_DIR=source
+	LOCAL_SOURCE_DIR=${LOCAL_SOURCE_DIR:-source}
 	if [ -n "$LOCAL_SOURCE_DIR" -a -d "${LOCAL_SOURCE_DIR}" ] ; then
 		rm -rf ${POUDRIERE_PORTDIR}/local_source 2>/dev/null
 		cp -a ${LOCAL_SOURCE_DIR} ${POUDRIERE_PORTDIR}/local_source
@@ -1113,13 +1113,20 @@ create_vm_dir()
 	done
 
 	# Install the packages from JSON manifest
+	# - get whether to use the "iso" or "vm" parent object
+	local pobj="vm"
+	jq -e '."vm"."auto-install-packages"' ${TRUEOS_MANIFEST} 2>/dev/null
+	if [ $? -ne 0 ] ; then
+		pobj="iso"
+	fi
+	# - Now loop through the list
 	for ptype in auto-install-packages
 	do
-		for c in $(jq -r '."iso"."'${ptype}'" | keys[]' ${TRUEOS_MANIFEST} 2>/dev/null | tr -s '\n' ' ')
+		for c in $(jq -r '."'${pobj}'"."'${ptype}'" | keys[]' ${TRUEOS_MANIFEST} 2>/dev/null | tr -s '\n' ' ')
 		do
 			eval "CHECK=\$$c"
 			if [ -z "$CHECK" -a "$c" != "default" ] ; then continue; fi
-			for i in $(jq -r '."iso"."'${ptype}'"."'$c'" | join(" ")' ${TRUEOS_MANIFEST})
+			for i in $(jq -r '."'${pobj}'"."'${ptype}'"."'$c'" | join(" ")' ${TRUEOS_MANIFEST})
 			do
 				if [ -z "${i}" ] ; then continue; fi
 				echo "Installing: $i"
