@@ -40,11 +40,11 @@ This will launch an interactive prompt to select a build manifest from the examp
 The selected Manifest name will get saved to the local ".config/manifest" file and used whenever the **TRUEOS_MANIFEST** environment variable is not set. This command may be run whenever a different default manifest is desired.
 
 ### make ports
+|Output Files|Output Ports Logs| Output Source Logs |
+|:---:|:---:|:---:|
+|release/packages |release/port-logs | release/src-logs| 
+
 Assemble packages for the OS and any ports listed in the build manifest. These packages will be automatically treated as  a full repository for use as needed.
-
-**Output Directory:** release/packages
-
-**Output Logs:** release/port-logs, release/src-logs
 
 Optional inputs (environment variables):
 * **POUDRIERE_BASEFS** : This is the path to the poudriere working directory ("/usr/local/poudriere" by default)
@@ -53,25 +53,25 @@ Optional inputs (environment variables):
    * Default value: "source"
 
 ### make iso
+|Output Files|Output Logs|
+|:---:|:---:|
+|release/iso |release/iso-logs |
+
 Use the package repository to assemble an ISO (hybrid DVD/USB image).
 
 **Note:** For any "*.iso" file that is created, this process will also generate *.sha256 and *.md5 checksum files as well.
-
-**Output Directory:** release/iso
-
-**Output Logs:** release/iso-logs
 
 Optional inputs (environment variables):
 * *TO-DO*
 
 ### make vm
+|Output Files|Output Logs|
+|:---:|:---:|
+|release/vm |release/vm-logs |
+
 Use the package repository to assemble a pre-installed VM image.
 
 **Note:** For any "*.img" file that is created, this process will also generate *.sha256 and *.md5 checksum files as well.
-
-**Output Directory:** release/vm
-
-**Output Logs:** release/vm-logs
 
 Optional inputs (environment variables):
 * **VMPOOLNAME** : Create/use a temporary ZFS pool with this name for the VM build environment.
