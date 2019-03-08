@@ -1,6 +1,4 @@
 {
-  "base-github-tag": "42ea129",
-  "ports-github-ga": "a1f8d1caadf4a4d740b0eb0490a401e5c50a2d45",
   "arch": {
     "platform": "arm64",
     "arch": "aarch64"
