@@ -93,7 +93,7 @@ The "iso" target within the manifest controls all the options specific to creati
 * **iso-packages** (JSON object) : Lists of packages (by port origin) to install into the ISO (when booting the ISO, these packages will be available to use)
    * **default** (JSON array of strings) : Default list (required)
    * **ENV_VARIABLE** (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name exists.
-* **auto-install-packages** (JSON object) : Lists of packages (by port origin) to automatically install when using the default TrueOS installer or when creating a VM image.
+* **auto-install-packages** (JSON object) : Lists of packages (by port origin) to automatically install when using the default TrueOS installer.
    * **NOTE:** These packages will automatically get added to the "dist-packages" available on the ISO as well.
    * **default** (JSON array of strings) : Default list (required)
    * **ENV_VARIABLE** (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name exists.
@@ -191,6 +191,10 @@ The "vm" target is used to provide custom settings when assembling a VM image wi
 * **disk-config** (string) : Name of the disk configuration script to use from the [vm-diskcfg directory](https://github.com/trueos/build/master/vm-diskconfig).
    * Example: a value of "zfs-noswap" will use the "vm-diskcfg/zfs-noswap.sh" disk configuration script to setup the VM.
 * **boot** (string) : Either "zfs" or "ufs". Use this filesystem for the VM image.
+* **auto-install-packages** (JSON object) : Lists of packages (by port origin) to automatically install into the VM image.
+   * **NOTE:** If this field is missing, it will use the "iso" version of the "auto-install-packages" field as a fallback list.
+   * **default** (JSON array of strings) : Default list (required)
+   * **ENV_VARIABLE** (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name exists.
 
 #### VM Example
 ```

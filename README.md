@@ -75,6 +75,10 @@ Use the package repository to assemble a pre-installed VM image.
 
 **Output Logs:** release/vm-logs
 
+Optional inputs (environment variables):
+* **VMPOOLNAME** : Create/use a temporary ZFS pool with this name for the VM build environment.
+   * Default Value: "vm-gen-pool"
+ 
 # License
 BSD 2 Clause
 
