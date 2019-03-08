@@ -42,7 +42,7 @@ The selected Manifest name will get saved to the local ".config/manifest" file a
 **WARNING:** If no build manifest is specified (either by running `make config` or providing the TRUEOS_MANIFEST environment variable), then the "trueos-snapshot.json" build manifest will be used automatically from the [manifests directory](https://github.com/trueos/build/tree/master/manifests).
 
 ### make ports
-Build all of the OS and ports and assemble a package repository.
+Assemble packages for the OS and any ports listed in the build manifest. These packages will be automatically treated as  a full repository for use as needed.
 
 **Output Directory:** release/packages
 
