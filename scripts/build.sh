@@ -532,20 +532,11 @@ setup_poudriere_jail()
 
 	export KERNEL_MAKE_FLAGS="$(get_kernel_flags)"
 	export WORLD_MAKE_FLAGS="$(get_world_flags)"
-        if jq -r '."arch"' $TRUESOS_MANIFEST; then
-          export ARCH="$(jq -r '."arch"."arch"' $TRUEOS_MANIFEST)"
-          if jq -r '."arch"."platform"' $TRUEOS_MANIFEST ; then
-            export PLATFORM="$(jq -r '."arch"."platform"' $TRUEOS_MANIFEST)"
-          else
-            export PLATFORM="${ARCH}"
-          fi
-        else
-          export ARCH="system"
-        fi
-        if [ $ARCH == "system" ] ; then
+        export ARCHITECTURE="$(get_architecture)"
+        if [ $ARCHITECTURE == ".native" ] ; then
 	poudriere jail -c -j $POUDRIERE_BASE -m ports=${POUDRIERE_PORTS} -v ${TRUEOS_VERSION}
         else
-	poudriere jail -c -j $POUDRIERE_BASE -m ports=${POUDRIERE_PORTS} -v ${TRUEOS_VERSION} -a ${PLATFORM}.${ARCH}
+	poudriere jail -c -j $POUDRIERE_BASE -m ports=${POUDRIERE_PORTS} -v ${TRUEOS_VERSION} -a ${ARCHITECTURE}
         fi
 	if [ $? -ne 0 ] ; then
 		exit 1
