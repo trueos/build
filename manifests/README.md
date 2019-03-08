@@ -174,6 +174,35 @@ The "iso" target within the manifest controls all the options specific to creati
 }
 ```
 
+### vm
+The "vm" target is used to provide custom settings when assembling a VM image with the `make vm` command.
+
+#### VM Options
+* **file-name** (string): Template for the generation of the IMG filename. There are a few format options which can be auto-populated:
+   * "%%TRUEOS_VERSION%%" : Replace this field with the value of the TRUEOS_VERSION environment variable.
+   * "%%GITHASH%%" : (Requires sources to be cloned with git) Replace this field with the hash of the latest git commit.
+   * "%%DATE%%" : Replace this field with the date that the image was generated (YYYYMMDD)'
+* **type** (string) : Custom type of VM to be used for additional setup procedures
+   * "ec2" : Ensure the VM is compatible with the Amazon EC2 specification.
+   * All other types are currently valid but do not trigger any custom configuration routines.
+* **size** (string) : Truncate the VM image file according to this option.
+   * This string is used as an argument to the "truncate -s [size] ...." command. 
+   * Please view the manual page for the "truncate" utility for additional information (`man truncate`).
+* **disk-config** (string) : Name of the disk configuration script to use from the [vm-diskcfg directory](https://github.com/trueos/build/master/vm-diskconfig).
+   * Example: a value of "zfs-noswap" will use the "vm-diskcfg/zfs-noswap.sh" disk configuration script to setup the VM.
+* **boot** (string) : Either "zfs" or "ufs". Use this filesystem for the VM image.
+
+#### VM Example
+```
+"vm" : {
+  "file-name" : "my-distro-EC2-%%TRUEOS_VERSION%%-%%DATE%%",
+  "type" : "ec2",
+  "size" : "3G",
+  "disk-config" : "zfs-noswap",
+  "boot" : "zfs"
+}
+```
+
 ### ports
 The "ports" target allows for configuring the build targets and options for the ports system. That can include changing the default version for particular packages, selecting a subset of packages to build, and more.
 
