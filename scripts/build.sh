@@ -97,12 +97,13 @@ env_check()
 			exit_err "Empty ports.branch!"
 		     fi ;;
 		svn) ;;
-              local) ;;
+		github-overlay) ;;
+		local) ;;
 		tar) ;;
 		*) exit_err "Unknown or unspecified ports.type!" ;;
 	esac
 
-	if [ -z "$PORTS_URL" ] ; then
+	if [ -z "$PORTS_URL" ] && [ "${PORTS_TYPE}" != "github-overlay" ] ; then
 		exit_err "Empty ports.url!"
 	fi
 
@@ -276,11 +277,13 @@ create_poudriere_ports()
 		if [ $? -ne 0 ] ; then
 			exit_err "Failed creating poudriere ports - GIT"
 		fi
+
 	elif [ "$PORTS_TYPE" = "svn" ] ; then
 		poudriere ports -c -p $POUDRIERE_PORTS -m svn -U "${PORTS_URL}" -B $PORTS_BRANCH
 		if [ $? -ne 0 ] ; then
 			exit_err "Failed creating poudriere ports - SVN"
 		fi
+
 	elif [ "$PORTS_TYPE" = "tar" ] ; then
 		echo "Fetching ports tarball"
 		fetch -o tmp/ports.tar ${PORTS_URL}
@@ -301,6 +304,22 @@ create_poudriere_ports()
 		if [ $? -ne 0 ] ; then
 			exit_err "Failed creating poudriere ports"
 		fi
+
+        elif [ "${PORTS_TYPE}" = "github-overlay" ] ; then
+		#Source the ports-interactions scripts
+		. "$(dirname $0)/ports-interactions.sh"
+		#Now checkout the ports tree and apply the overlay
+		local portsdir=tmp/$(basename -s ".json" "${TRUEOS_MANIFEST}")
+		checkout_gh_ports "${portsdir}"
+		if [ $? -ne 0 ] ; then
+			exit_err "Failed fetching poudriere ports: github-overlay"
+		fi
+		# Now do the nullfs mount into poudriere
+		poudriere ports -c -p $POUDRIERE_PORTS -m null -M "${portsdir}"
+		if [ $? -ne 0 ] ; then
+			exit_err "Failed creating poudriere ports"
+		fi
+
 	else
 		# Doing a nullfs mount of existing directory
 		poudriere ports -c -p $POUDRIERE_PORTS -m null -M ${PORTS_URL}

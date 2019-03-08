@@ -11,6 +11,7 @@
 # Primary Functions
 #---------------------------------------------------
 # apply_ports_overlay(ports_tree_path) + TRUEOS_MANIFEST
+# checkout_gh_ports(ports_tree_path) + TRUEOS_MANIFEST
 
 # Stand-alone functions used internally
 # ---------------------------------------------------
@@ -145,7 +146,7 @@ apply_ports_overlay(){
 
   local _ports="$1"
 
-  num=`jq -r '."ports-overlay" | length' "${TRUEOS_MANIFEST}"`
+  num=`jq -r '."ports"."github-overlay" | length' "${TRUEOS_MANIFEST}"`
   if [ "${num}" = "null" ] || [ -z "${num}" ] ; then
     #nothing to do
     return 0
@@ -154,9 +155,9 @@ apply_ports_overlay(){
   local _reg_cats=""
   while [ ${i} -lt ${num} ]
   do
-    _type=`jq -r '."ports-overlay"['${i}'].type' "${TRUEOS_MANIFEST}"`
-    _name=`jq -r '."ports-overlay"['${i}'].name' "${TRUEOS_MANIFEST}"`
-    _path=`jq -r '."ports-overlay"['${i}'].local_path' "${TRUEOS_MANIFEST}"`
+    _type=`jq -r '."ports"."github-overlay"['${i}'].type' "${TRUEOS_MANIFEST}"`
+    _name=`jq -r '."ports"."github-overlay"['${i}'].name' "${TRUEOS_MANIFEST}"`
+    _path=`jq -r '."ports"."github-overlay"['${i}'].local_path' "${TRUEOS_MANIFEST}"`
     if [ ! -e "${_path}" ] ; then
       # See if this is a relative path from the manifest location instead
       local CURDIR=$(dirname "${TRUEOS_MANIFEST}")
@@ -181,38 +182,58 @@ apply_ports_overlay(){
   return 0
 }
 
-checkout(){
-  #
-
-  SRCDIR="${2}"
-  if [ "$1" = "base" ] ; then
-    GH_BASE_ORG=`jq -r '."base-github-org"' "${TRUEOS_MANIFEST}"`
-    GH_BASE_REPO=`jq -r '."base-github-repo"' "${TRUEOS_MANIFEST}"`
-    GH_BASE_TAG=`jq -r '."base-github-tag"' "${TRUEOS_MANIFEST}"`
-    echo "[INFO] Check out base repository"
-    if [ -z "${GH_BASE_ORG}" ] ; then
-      echo "[ERROR] Could not read base-github-org from JSON manifest!"
-      return 1
-    fi
-  elif [ "$1" = "ports" ] ; then
-    GH_BASE_ORG=`jq -r '."ports-github-org"' "${TRUEOS_MANIFEST}"`
-    GH_BASE_REPO=`jq -r '."ports-github-repo"' "${TRUEOS_MANIFEST}"`
-    GH_BASE_TAG=`jq -r '."ports-github-tag"' "${TRUEOS_MANIFEST}"`
-    if [ -z "${GH_BASE_ORG}" ] || [ "null" = "${GH_BASE_ORG}" ] ; then
-      #This is optional - just skip it if not set/used in the manifest
-      return 0
-    fi
-    echo "[INFO] Check out ports repository"
+check_github_tag(){
+  #Inputs: 1: github tag to check
+  LC_ALL="C" #Need C locale to get the right lower-case matching
+  local _tag="${1}"
+  #First do a quick check for non-valid characters in the tag name
+  echo "${_tag}" | grep -qE '^[0-9a-z]+$'
+  if [ $? -ne 0 ] ; then return 1; fi
+  #Now check the length of the tag
+  local _length=`echo "${_tag}" | wc -m | tr -d '[:space:]'`
+  #echo "[INFO] Checking Github Tag Length: ${_tag} ${_length}"
+  if [ ${_length} -eq 41 ] ; then
+    #right length for a GitHub commit tag (40 characters + null)
+    return 0
   fi
+  return 1
+}
+
+compare_tar_files(){
+  #INPUTS:
+  # 1: path to file 1
+  # 2: path to file 2
+  local oldsha=`sha512 -q "${1}"`
+  local newsha=`sha512 -q "${2}"`
+  if [ "$oldsha" = "$newsha" ] ; then
+    return 0
+  fi
+  return 1
+}
+
+checkout_gh_ports(){
+  # Fetch a source tree (base or ports) from GitHub and apply an overlay as needed
+  # Note: This fetches the source tree *without* using git - it fetches a tarball instead
+  # Inputs:
+  # $1 :  Path to directory where the source tree should be placed
+
+  local SRCDIR="${1}"
+  local GH_BASE_ORG=`jq -r '."ports"."github-org"' "${TRUEOS_MANIFEST}"`
+  local GH_BASE_REPO=`jq -r '."ports"."github-repo"' "${TRUEOS_MANIFEST}"`
+  local GH_BASE_TAG=`jq -r '."ports"."github-tag"' "${TRUEOS_MANIFEST}"`
+  if [ -z "${GH_BASE_ORG}" ] || [ "null" = "${GH_BASE_ORG}" ] ; then
+    return 1
+  fi
+  echo "[INFO] Check out ports repository"
   #If a branch name was specified
-  GH_BASE_BRANCH="${GH_BASE_TAG}"
+  local GH_BASE_BRANCH="${GH_BASE_TAG}"
   check_github_tag "${GH_BASE_TAG}"
   if [ $? -ne 0 ] && [ -e "/usr/local/bin/git" ] ; then
     # Get the latest commit on this branch and use that as the commit tag (prevents constantly downloading a branch to check checksums)  
     GH_BASE_TAG=`git ls-remote "https://github.com/${GH_BASE_ORG}/${GH_BASE_REPO}" "${GH_BASE_TAG}" | cut -w -f 1`
   fi
-  BASE_CACHE_DIR="/tmp/trueos-repo-cache"
-  BASE_TAR="${BASE_CACHE_DIR}/${GH_BASE_ORG}_${GH_BASE_REPO}_${GH_BASE_TAG}.tgz"
+  local BASE_CACHE_DIR="/tmp/$(basename -s .json ${TRUEOS_MANIFEST})"
+  local BASE_TAR="${BASE_CACHE_DIR}/${GH_BASE_ORG}_${GH_BASE_REPO}_${GH_BASE_TAG}.tgz"
   local _skip=1
   if [ -d "${BASE_CACHE_DIR}" ] ; then
     if [ -e "${BASE_TAR}" ] ; then
@@ -236,12 +257,10 @@ checkout(){
   else
     mkdir -p "${BASE_CACHE_DIR}"
   fi
-  BASE_URL="https://github.com/${GH_BASE_ORG}/${GH_BASE_REPO}/tarball/${GH_BASE_BRANCH}"
-  #NOTE: Fetch works, but seems slower than using curl
+  local BASE_URL="https://github.com/${GH_BASE_ORG}/${GH_BASE_REPO}/tarball/${GH_BASE_BRANCH}"
   if [ ${_skip} -ne 0 ] ; then
     echo "[INFO] Downloading Repo..."
     fetch --retry -o "${BASE_TAR}" "${BASE_URL}"
-    #curl -L "${base_url}" -o "${BASE_TAR}"
     if [ $? -ne 0 ] ; then
       echo "[ERROR] Could not download repository: ${BASE_URL}"
       return 1
@@ -256,7 +275,7 @@ checkout(){
     rm "${BASE_TAR}.prev"
   fi
   if [ -d "${SRCDIR}" ] && [ 0 -ne "${_skip}" ] ; then
-    if [ "$1" = "base" ] ; then clean_base ; fi
+    # Upstream changed - need to delete and re-checkout repo
     rm -rf "${SRCDIR}"
   fi
   if [ ! -d "${SRCDIR}" ] ; then
@@ -277,7 +296,5 @@ checkout(){
   # =====
   # Ports Tree Overlay
   # =====
-  if [ "$1" = "ports" ] ; then
-    apply_ports_overlay "${SRCDIR}"
-  fi
+  apply_ports_overlay "${SRCDIR}"
 }
