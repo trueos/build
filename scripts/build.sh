@@ -43,7 +43,7 @@ exit_err()
 if [ -z "$TRUEOS_MANIFEST" ] ; then
 	if [ -e ".config/manifest" ] ; then
 		export TRUEOS_MANIFEST="$(pwd)/manifests/$(cat .config/manifest)"
-	elif [ -e "$(pwd)/manifests/trueos-snapshot.json" ] ; then
+	elif [ -e "$(pwd)/manifests/trueos-snapshot-builder.json" ] ; then
 		export TRUEOS_MANIFEST="$(pwd)/manifests/trueos-snapshot-builder.json"
 	fi
 fi
@@ -203,7 +203,7 @@ create_release_links()
 is_ports_dirty()
 {
 	# Does ports tree already exist?
-	poudriere ports -l | grep -q -w ${POUDRIERE_PORTS}
+	poudriere ports -l 2>/dev/null | grep -q -w ${POUDRIERE_PORTS}
 	if [ $? -ne 0 ]; then
 		return 1
 	fi
