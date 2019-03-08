@@ -42,7 +42,9 @@ This selection will get saved to the local ".config/manifest" file and used when
 ### make ports
 Build all of the OS and ports and assemble a package repository.
 
-**Output Directory:** /usr/obj/???
+**Output Directory:** release/packages
+
+**Output Logs:** release/port-logs, release/src-logs
 
 Optional inputs (environment variables):
 * **POUDRIERE_BASEFS** : This is the path to the poudriere working directory ("/usr/local/poudriere" by default)
@@ -52,23 +54,27 @@ Optional inputs (environment variables):
 
 ### make iso
 Use the package repository to assemble an ISO (hybrid DVD/USB image).
+
 **Note:** For any "*.iso" file that is created, this process will also generate *.sha256 and *.md5 checksum files as well.
 
 **Output Directory:** release/iso
-**Output Logs:** release/iso-logs/*.log
+
+**Output Logs:** release/iso-logs
 
 Optional inputs (environment variables):
 * *TO-DO*
 
 ### make vm
 Use the package repository to assemble a pre-installed VM image.
+
 **Note:** For any "*.img" file that is created, this process will also generate *.sha256 and *.md5 checksum files as well.
 
 **Output Directory:** release/vm
 
+**Output Logs:** release/vm-logs
+
 # License
-----
 BSD 2 Clause
 
-
+----
 *This documentation was provided by Ken Moore from the [Project Trident](https://project-trident.org) distribution of TrueOS*
