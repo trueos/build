@@ -14,20 +14,24 @@ This document corresponds to version "1.1", so any manifest using this specifica
 ### Distribution Branding
 There are a couple options which may be set in the manifest in order to "brand" the distribution of TrueOS.
 
-* "os_name" (string) : Branding name for the distribution.
+* **os_name** (string) : Branding name for the distribution.
    * Default Value: "TrueOS"
    * Will change the branding in pc-installdialog, and the distro branding in the bootloader as well.
-* "os_version" (string) : Custom version tag for the build. 
+* **os_version** (string) : Custom version tag for the build. 
    * At build time this will become the "TRUEOS_VERSION" environment variable which can be used in filename expansions and such later (if that environment variable is not already set).
 
+### base-packages
+The "base-packages" target allows the configuration of the OS packages itself. This can involve the naming scheme, build flags, extra dependencies, and more.
+
+
 #### Base Packages Options
-* "name-prefix" (string) : Naming convention for the base packages (Example: FreeBSD-runtime will become [name-prefix]-runtime)
-* "depends" (JSON object) : This is a object containing declarations of additional dependencies that you would like to add to particular base packages: The next level of the object is the name of the base package, then within that object is the name of the package you want to add as a dependency, and within that is the origin and version of the package that is needed. See the example below for a working demonstration of this dependency injection.
+* **name-prefix** (string) : Naming convention for the base packages (Example: FreeBSD-runtime will become [name-prefix]-runtime)
+* **depends** (JSON object) : This is a object containing declarations of additional dependencies that you would like to add to particular base packages: The next level of the object is the name of the base package, then within that object is the name of the package you want to add as a dependency, and within that is the origin and version of the package that is needed. See the example below for a working demonstration of this dependency injection.
    * **WARNING:** Make sure that only simple ports/packages are injected with this mechanism! Example: The runtime package installs the user/groups files on the system, so adding a dependency on a package that needs to create a user/group will cause install failures since the dependency is installed before the runtime package.
-* "kernel-flags" and "world-flags" (JSON object) : These are objects containing extra builds flags that will be used for the kernel/world build stages. 
-   * "default" (JSON array of strings) : Default list of build flags (required)
-   * "ENV_VARIABLE" (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name exists.
-* "strip-plist" (JSON array of strings) :  List of directories or files that need to be removed from the base-packages.
+* **kernel-flags** and **world-flags** (JSON object) : These are objects containing extra builds flags that will be used for the kernel/world build stages. 
+   * **default** (JSON array of strings) : Default list of build flags (required)
+   * **ENV_VARIABLE** (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name exists.
+* **strip-plist** (JSON array of strings) :  List of directories or files that need to be removed from the base-packages.
 
 #### Base Packages Example
 ```
@@ -72,45 +76,45 @@ There are a couple options which may be set in the manifest in order to "brand" 
 The "iso" target within the manifest controls all the options specific to creation/setup of the ISO image. This can involve setting a custom install script, choosing packages which need to be installed or available for installation on the ISO, and more.
 
 #### ISO Options
-* "file-name" (string): Template for the generation of the ISO filename. There are a few format options which can be auto-populated:
-   * "%%TRUEOS_VERSION%%" : Replace this field with the value of the TRUEOS_VERSION environment variable.
-   * "%%GITHASH%%" : (Requires sources to be cloned with git) Replace this field with the hash of the latest git commit.
-   * "%%DATE%%" : Replace this field with the date that the ISO was generated (YYYYMMDD)'
-* "install-script" (string): Tool to automatically launch when booting the ISO (default: `pc-sysinstaller`)
-* "auto-install-script" (string): Path to config file for `pc-sysinstall` to perform an unattended installation.
-* "post-install-commands" (JSON array of objects) : Additional commands to run after an installation with pc-sysinstaller (not used for custom install scripts).
-   * "chroot" (boolian) : Run command within the newly-installed system (true) or on the ISO itself (false)
-   * "command" (string) : Command to run
-* "prune" (JSON object) : Lists of files or directories to remove from the ISO
-   * "default" (JSON array of strings) : Default list (required)
-   * "ENV_VARIABLE" (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name exists.
-* "dist-packages" (JSON object) : Lists of packages (by port origin) to have available in .txz form on the ISO
-   * "default" (JSON array of strings) : Default list (required)
-   * "ENV_VARIABLE" (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name exists.
-* "offline-update" (boolian) : If set to true will generate a system-update.img file containing ISOs dist files
-* "optional-dist-packages" (JSON object) : Lists of packages (by port origin) to have available in .txz form on the ISO. These ones are considered "optional" and may or may not be included depending on whether the package built successfully.
-   * "default" (JSON array of strings) : Default list (required)
-   * "ENV_VARIABLE" (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name exists.
-* "pool" (JSON object) : Settings for boot pool
- * "name" (string) : Default name of ZFS boot pool
-* "prune-dist-packages" (JSON object) : Lists of *regular expressions* to use to find and remove dist packages. This is useful for forcibly removing particular types of base packages.
+* **file-name** (string): Template for the generation of the ISO filename. There are a few format options which can be auto-populated:
+   * **%%TRUEOS_VERSION%%** : Replace this field with the value of the TRUEOS_VERSION environment variable.
+   * **%%GITHASH%%** : (Requires sources to be cloned with git) Replace this field with the hash of the latest git commit.
+   * **%%DATE%%** : Replace this field with the date that the ISO was generated (YYYYMMDD)'
+* **install-script** (string): Tool to automatically launch when booting the ISO (default: `pc-sysinstaller`)
+* **auto-install-script** (string): Path to config file for `pc-sysinstall` to perform an unattended installation.
+* **post-install-commands** (JSON array of objects) : Additional commands to run after an installation with pc-sysinstaller (not used for custom install scripts).
+   * **chroot** (boolian) : Run command within the newly-installed system (true) or on the ISO itself (false)
+   * **command** (string) : Command to run
+* **prune** (JSON object) : Lists of files or directories to remove from the ISO
+   * **default** (JSON array of strings) : Default list (required)
+   * **ENV_VARIABLE** (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name exists.
+* **dist-packages** (JSON object) : Lists of packages (by port origin) to have available in .txz form on the ISO
+   * **default** (JSON array of strings) : Default list (required)
+   * **ENV_VARIABLE** (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name exists.
+* **offline-update** (boolian) : If set to true will generate a system-update.img file containing ISOs dist files
+* **optional-dist-packages** (JSON object) : Lists of packages (by port origin) to have available in .txz form on the ISO. These ones are considered "optional" and may or may not be included depending on whether the package built successfully.
+   * **default** (JSON array of strings) : Default list (required)
+   * **ENV_VARIABLE** (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name exists.
+* **pool** (JSON object) : Settings for boot pool
+ * **name** (string) : Default name of ZFS boot pool
+* **prune-dist-packages** (JSON object) : Lists of *regular expressions* to use to find and remove dist packages. This is useful for forcibly removing particular types of base packages.
    * Note: The regular expression support is shell based (grep -E "expression"). Lookahead and look
-   * "default" (JSON array of strings) : Default list (required)
-   * "ENV_VARIABLE" (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name exists.
-* "iso-packages" (JSON object) : Lists of packages (by port origin) to install into the ISO (when booting the ISO, these packages will be available to use)
-   * "default" (JSON array of strings) : Default list (required)
-   * "ENV_VARIABLE" (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name exists.
-* "ignore-base-packages" (JSON array of strings) : List of base packages to ignore when installing base packages into the ISO. 
+   * **default** (JSON array of strings) : Default list (required)
+   * **ENV_VARIABLE** (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name exists.
+* **iso-packages** (JSON object) : Lists of packages (by port origin) to install into the ISO (when booting the ISO, these packages will be available to use)
+   * **default** (JSON array of strings) : Default list (required)
+   * **ENV_VARIABLE** (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name exists.
+* **ignore-base-packages** (JSON array of strings) : List of base packages to ignore when installing base packages into the ISO. 
    * This is turned into a regex automatically, so "-clang-" will remove all forms of the clang package, but "-clang-development" will only ignore the development package for clang.
    * **WARNING** Do *NOT* ignore the "runtime" package - this will typically break the ability of the ISO to start up.
-* "auto-install-packages" (JSON object) : Lists of packages (by port origin) to automatically install when using the default TrueOS installer.
+* **auto-install-packages** (JSON object) : Lists of packages (by port origin) to automatically install when using the default TrueOS installer.
    * **NOTE:** These packages will automatically get added to the "dist-packages" available on the ISO as well.
-   * "default" (JSON array of strings) : Default list (required)
-   * "ENV_VARIABLE" (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name exists.
-* "overlay" (JSON object) : Overlay files or directories to be inserted into the ISO
-   * "type" (string) : One of the following options: [git, svn, tar, local]
-   * "branch" (string) : Branch of the repository to fetch (svn/git).
-   * "url" (string) : Url to the repository (svn/git), URL to fetch tar file (tar), or path to the directory (local)
+   * **default** (JSON array of strings) : Default list (required)
+   * **ENV_VARIABLE** (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name exists.
+* **overlay** (JSON object) : Overlay files or directories to be inserted into the ISO
+   * **type** (string) : One of the following options: [git, svn, tar, local]
+   * **branch** (string) : Branch of the repository to fetch (svn/git).
+   * **url** (string) : Url to the repository (svn/git), URL to fetch tar file (tar), or path to the directory (local)
    
 #### ISO Example
 ```
@@ -192,18 +196,18 @@ The "iso" target within the manifest controls all the options specific to creati
 The "ports" target allows for configuring the build targets and options for the ports system. That can include changing the default version for particular packages, selecting a subset of packages to build, and more.
 
 #### Ports Options
-* "type" (string) : One of the following: [git, svn, tar, local, null]. Where to look for the ports tree.
-* "branch" (string) : Branch of the repository to use (svn/git only)
-* "url" (string) : URL to the repository (svn/git), where to fetch the tar file (tar), or path to directory (local)
-* "local_source" (string) : Path to a local directory where the ports tree should be placed (used for reproducible builds). This directory name will be visible in the output of `uname` on installed systems.
-* "build-all" (boolian) : Build the entire ports collection (true/false)
-* "build" (JSON object) : Lists of packages (by port origin) to build. If "build-all" is true, then this list will be treated as "essential" packages and if any of them fail to build properly then the entire build will be flagged as a failure.
-   * "default" (JSON array of strings) : Default list (required)
-   * "ENV_VARIABLE" (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name is set
-* "make.conf" (JSON object) : Lists of build flags for use when building the ports.
-   * "default" (JSON array of strings) : Default list (required)
-   * "ENV_VARIABLE" (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name is set
-* "strip-plist" (JSON array of strings) : List of files or directories to remove from any packages that try to use them.
+* **type** (string) : One of the following: [git, svn, tar, local, null]. Where to look for the ports tree.
+* **branch** (string) : Branch of the repository to use (svn/git only)
+* **url** (string) : URL to the repository (svn/git), where to fetch the tar file (tar), or path to directory (local)
+* **local_source** (string) : Path to a local directory where the ports tree should be placed (used for reproducible builds). This directory name will be visible in the output of `uname` on installed systems.
+* **build-all** (boolian) : Build the entire ports collection (true/false)
+* **build** (JSON object) : Lists of packages (by port origin) to build. If "build-all" is true, then this list will be treated as "essential" packages and if any of them fail to build properly then the entire build will be flagged as a failure.
+   * **default** (JSON array of strings) : Default list (required)
+   * **ENV_VARIABLE** (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name is set
+* **make.conf** (JSON object) : Lists of build flags for use when building the ports.
+   * **default** (JSON array of strings) : Default list (required)
+   * **ENV_VARIABLE** (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name is set
+* **strip-plist** (JSON array of strings) : List of files or directories to remove from any packages that try to use them.
 
 #### Ports Example
 ```
@@ -243,20 +247,24 @@ The "ports" target allows for configuring the build targets and options for the 
 The "poudriere" object allows the configuration of the poudriere build system for individual build manifests, allowing many different builds to be performed on the same system without conflicting with each other.
 
 #### Poudriere Options
-* "jailname" (string) : Use this name internally for the jail which is used for the builds.
+* **jailname** (string) : Use this name internally for the jail which is used for the builds.
    * If not provided, the "trueos-mk-base" name will be used.
-* "portsname" (string) : Use this name internally for the ports tree used by the build.
+* **portsname** (string) : Use this name internally for the ports tree used by the build.
    * If not provided, the "trueos-mk-ports" name will be used.
 
-### base-packages
-The "base-packages" target allows the configuration of the OS packages itself. This can involve the naming scheme, build flags, extra dependencies, and more.
-
+#### Poudriere Example
+```
+"poudriere" : {
+  "jailname" : "my-distro-edge",
+  "portsname" : "edge"
+}
+```
 
 ### poudriere-conf
 This field contains a list of options to use to configure the poudriere instance that will build the packages. The configuration of poudriere is automatically performed to ensure an optimal result for most build systems, but it is possible to further customize these settings as needed.
 
 #### Poudriere-conf Options
-* "poudriere-conf" (JSON array of strings) : List of configuration options for poudriere
+* **poudriere-conf** (JSON array of strings) : List of configuration options for poudriere
 * */etc/poudriere.conf.release* - If this file exists on the system, it will be appended as a whole to the auto-generated config.
 
 Common options to configure:
@@ -299,11 +307,11 @@ PRIORITY_BOOST="pypy* openoffice* iridium* chromium*"
 As part of the build process, the packages can also be automatically assembled into a full package repository which may be used for providing access to the newly-build packages on other systems.
 
 #### pkg-repo Options
-* "pkg-repo-name" (string) : Short-name for the package repository (default: "TrueOS")
-* "pkg-train-name" (string) : Name for the package repository train used by sysutils/sysup (default: "TrueOS")
-* "pkg-repo" (JSON Object) : Settings for the unified base+ports package repo
-   * "url" (string) : Public URL where the repository can be found. (Distro creators will need to setup access for this URL and copy the pkg repo files as needed to make them available at the given location).
-   * "pubKey" (JSON Array of strings) : SSL public key to use when verifying integrity of downloaded packages (one line of test per item in the array). This is basically just the plain-text of the SSL public key file converted into an array of strings. 
+* **pkg-repo-name** (string) : Short-name for the package repository (default: "TrueOS")
+* **pkg-train-name** (string) : Name for the package repository train used by sysutils/sysup (default: "TrueOS")
+* **pkg-repo** (JSON Object) : Settings for the unified base+ports package repo
+   * **url** (string) : Public URL where the repository can be found. (Distro creators will need to setup access for this URL and copy the pkg repo files as needed to make them available at the given location).
+   * **pubKey** (JSON Array of strings) : SSL public key to use when verifying integrity of downloaded packages (one line of test per item in the array). This is basically just the plain-text of the SSL public key file converted into an array of strings. 
       * **WARNING** Make sure that this public key is the complement to the private key that you are using to sign the packages!!
    
 #### pkg-repo Example
