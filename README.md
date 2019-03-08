@@ -14,6 +14,8 @@ TrueOS uses a single JSON configuration file as a "build manifest" containing al
 A build manifest can be supplied for the build in a couple of different ways:
 1. Set the "TRUEOS_MANIFEST" environment variable to the absolute path to the desired build manifest file.
 2. Run `make config` to select from one of the available build manifests in the [manifests directory](https://github.com/trueos/build/tree/master/manifests).
+3. Do nothing and automatically use the default build manifest (trueos-snapshot). 
+   * NOTE: The trueos-snapshot manifest only builds a tiny subset of packages and is primarily used for testing the build procedures and base OS packages only.
 
 # Usage
 Standard commands to build a TrueOS distribution:
