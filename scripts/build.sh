@@ -495,9 +495,9 @@ build_poudriere()
 			mkdir -p "${mandir}"
 		fi
 		# Copy over the relevant files from the ports tree
-		cp "${POUDRIERE_PORTDIR}/MOVED" ${mandir}/.
-		cp "${POUDRIERE_PORTDIR}/UPDATING" ${mandir}/.
-		cp "${POUDRIERE_PORTDIR}/CHANGES" ${mandir}/.
+		cp "$(find ${POUDRIERE_PORTDIR} -maxdepth 3 -name MOVED)" ${mandir}/.
+		cp "$(find ${POUDRIERE_PORTDIR} -maxdepth 3 -name UPDATING)" ${mandir}/.
+		cp "$(find ${POUDRIERE_PORTDIR} -maxdepth 3 -name CHANGES)" ${mandir}/.
 		# Assemble a quick list of all the ports/packages that are available in the repo
 		# NOTE: This entire section could be replaced by a single pkg command if we could figure out
 		#  how to manually tell pkg to use this repo for a quick query
