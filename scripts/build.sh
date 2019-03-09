@@ -460,6 +460,9 @@ build_poudriere()
 		# Start the build
 		echo "Starting poudriere FULL build"
 		poudriere bulk -a -j $POUDRIERE_BASE -p ${POUDRIERE_PORTS}
+		if [ $? -ne 0 ] ; then
+			exit_err "Failed poudriere build"
+		fi
 		check_essential_pkgs
 		if [ $? -ne 0 ] ; then
 			exit_err "Failed building all essential packages.."
@@ -480,9 +483,43 @@ build_poudriere()
 		if [ $? -ne 0 ] ; then
 			exit_err "Failed poudriere build"
 		fi
-
 	fi
+	# Assemble the package manifests as needed
+	if [ $(jr -r '."ports"."generate-manifests"' ${TRUEOS_MANIFEST}) = "true" ] ; then
+		echo "Generating Package Manifests"
+		#Cleanup the output directory first
+		local mandir="release/pkg-manifests"
+		if [ -d "${mandir}" ] ; then
+			rm ${mandir}/*
+		else
+			mkdir -p "${mandir}"
+		fi
+		# Copy over the relevant files from the ports tree
+		cp "${POUDRIERE_PORTDIR}/MOVED" ${mandir}/.
+		cp "${POUDRIERE_PORTDIR}/UPDATING" ${mandir}/.
+		cp "${POUDRIERE_PORTDIR}/CHANGES" ${mandir}/.
+		# Assemble a quick list of all the ports/packages that are available in the repo
+		# NOTE: This entire section could be replaced by a single pkg command if we could figure out
+		#  how to manually tell pkg to use this repo for a quick query
+		#  pkg [setup flags] query -a "%o : %n : %v" > "${mandir}/pkg.list
 
+		# Find the actual dir which contains all the package files
+		local _pkgdir=$(find release/packages -maxdepth 4 -name "All")
+		for _path in `find "${_pkgdir}" -depth 1 -name "*.txz" | sort`
+		do
+			#Cleanup the individual line (directory, suffix)
+			_line=$(basename ${_path} | sed "s|.txz||g")
+			#Make sure it is a valid package name - otherwise skip it
+			case "${_line}" in
+				fbsd-distrib) continue ;;
+				*-*) ;;
+				*) continue ;;
+			esac
+			#Read off the name/version of the package file and put it into the manifest
+			pkg query -F "${_path}" "%o : %n : %v" >> "${mandir}/pkg.list"
+		done
+	fi
+	return 0
 }
 
 clean_poudriere()

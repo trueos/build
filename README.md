@@ -40,17 +40,30 @@ This will launch an interactive prompt to select a build manifest from the examp
 The selected Manifest name will get saved to the local ".config/manifest" file and used whenever the **TRUEOS_MANIFEST** environment variable is not set. This command may be run whenever a different default manifest is desired.
 
 ### make ports
-|Output Files|Output Ports Logs| Output Source Logs |
-|:---:|:---:|:---:|
-|release/packages |release/port-logs | release/src-logs| 
+|Output Files|Output Ports Logs| Output Source Logs | Output Manifests |
+|:---:|:---:|:---:|:---:|
+|release/packages |release/port-logs | release/src-logs| release/pkg-manifests |
 
 Assemble packages for the OS and any ports listed in the build manifest. These packages will be automatically treated as  a full repository for use as needed.
 
-Optional inputs (environment variables):
+#### Optional inputs (environment variables):
 * **POUDRIERE_BASEFS** : This is the path to the poudriere working directory ("/usr/local/poudriere" by default)
 * **SIGNING_KEY** : This is the private key which should be used to sign the packages once they are built.
 * **LOCAL_SOURCE_DIR** : Location of any additional source files which need to be copied into the OS source tree (source tree overlay).
    * Default value: "source"
+
+#### Output directory details:
+* release/packages (symlink) : Main outputs. Directory structure containing package repository
+* release/port-logs (symlink) : Poudriere build logs for each package are contained here.
+* release/src-logs (symlink) : Special build logs for the buildworld/buildkernel base packages.
+* release/pkg-manifests (optional) : Additional repository management files
+   * The "ports" -> "generate-manifests" field must be set to `true` to generate these outputs
+   * Manifest files contain:
+      * CHANGES : Management file from the version of the ports tree that was used.
+      * MOVED : Management file from the version of the ports tree that was used.
+      * UPDATING : Management file from the version of the ports tree that was used.
+      * pkg.list : Plaintext file containing a list of all packages contained in the repo (one package per line)
+         * Line syntax: "[port origin] : [package name] : [package version]")
 
 ### make iso
 |Output Files|Output Logs|
