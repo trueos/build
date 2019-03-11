@@ -307,6 +307,11 @@ create_poudriere_ports()
 			exit_err "Failed extracting poudriere ports"
 		fi
 
+		#Source the ports-interactions scripts
+		. "$(dirname $0)/ports-interactions.sh"
+		# Apply any ports overlay
+		apply_ports_overlay "tmp/ports-tree"
+
 		poudriere ports -c -p $POUDRIERE_PORTS -m null -M tmp/ports-tree
 		if [ $? -ne 0 ] ; then
 			exit_err "Failed creating poudriere ports"
@@ -328,6 +333,11 @@ create_poudriere_ports()
 		fi
 
 	else
+		# LOCAL TYPE
+		#Source the ports-interactions scripts
+		. "$(dirname $0)/ports-interactions.sh"
+		# Apply any ports overlay
+		apply_ports_overlay "${PORTS_URL}"
 		# Doing a nullfs mount of existing directory
 		poudriere ports -c -p $POUDRIERE_PORTS -m null -M ${PORTS_URL}
 		if [ $? -ne 0 ] ; then

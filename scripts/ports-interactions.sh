@@ -146,7 +146,7 @@ apply_ports_overlay(){
 
   local _ports="$1"
 
-  num=`jq -r '."ports"."github-overlay" | length' "${TRUEOS_MANIFEST}"`
+  num=`jq -r '."ports"."overlay" | length' "${TRUEOS_MANIFEST}"`
   if [ "${num}" = "null" ] || [ -z "${num}" ] ; then
     #nothing to do
     return 0
@@ -155,9 +155,9 @@ apply_ports_overlay(){
   local _reg_cats=""
   while [ ${i} -lt ${num} ]
   do
-    _type=`jq -r '."ports"."github-overlay"['${i}'].type' "${TRUEOS_MANIFEST}"`
-    _name=`jq -r '."ports"."github-overlay"['${i}'].name' "${TRUEOS_MANIFEST}"`
-    _path=`jq -r '."ports"."github-overlay"['${i}'].local_path' "${TRUEOS_MANIFEST}"`
+    _type=`jq -r '."ports"."overlay"['${i}'].type' "${TRUEOS_MANIFEST}"`
+    _name=`jq -r '."ports"."overlay"['${i}'].name' "${TRUEOS_MANIFEST}"`
+    _path=`jq -r '."ports"."overlay"['${i}'].local_path' "${TRUEOS_MANIFEST}"`
     if [ ! -e "${_path}" ] ; then
       # See if this is a relative path from the manifest location instead
       local CURDIR=$(dirname "${TRUEOS_MANIFEST}")

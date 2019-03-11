@@ -219,11 +219,12 @@ The "ports" target allows for configuring the build targets and options for the 
 * **github-tag** (string) : (github-overlay type only) Either a branch name or a commit tag from the default branch.
    * If a branch name is supplied, then every time the build is run it will check to see if the upstream repo/branch has changed, and update itself as needed
    * If a commit tag is supplied, the it will grab the version of the *default branch* at the designated commit.
-* **github-overlay** (JSON array of objects) : Entries to apply various overlay(s) to the ports tree after it has been checked out.
-      * Syntax for objects within the array:
-         * "type" : (string) Either "category" (adding a new category to the ports tree) or "port" (adding a single port to the tree)
-         * "name" : (string) Category name ("mydistro") or port origin ("devel/myport") depending on the type of overlay.
-         * "local_path" : (string) path to the local directory which will be used as the overlay.
+* **overlay** (JSON array of objects) : Entries to apply various overlay(s) to the ports tree after it has been checked out.
+   * **WARNING** Ports overlay can only be used with the "tar","local", "null", and "github-overlay" ports types.
+   * Syntax for objects within the array:
+      * "type" : (string) Either "category" (adding a new category to the ports tree) or "port" (adding a single port to the tree)
+      * "name" : (string) Category name ("mydistro") or port origin ("devel/myport") depending on the type of overlay.
+      * "local_path" : (string) path to the local directory which will be used as the overlay.
 * **local_source** (string) : Path to a local directory where the ports tree should be placed (used for reproducible builds). This directory name will be visible in the output of `uname` on installed systems.
 * **build-all** (boolian) : Build the entire ports collection (true/false)
 * **build** (JSON object) : Lists of packages (by port origin) to build. If "build-all" is true, then this list will be treated as "essential" packages and if any of them fail to build properly then the entire build will be flagged as a failure.
