@@ -75,7 +75,8 @@ Use the package repository to assemble an ISO (hybrid DVD/USB image).
 **Note:** For any "*.iso" file that is created, this process will also generate *.sha256 and *.md5 checksum files as well.
 
 Optional inputs (environment variables):
-* *TO-DO*
+* **SIGNING_KEY** : This is the private key which should be used to sign the ISO file once it is built.
+   * This will also create a "pubkey.pem" file in the output dir which contains the public key for the signature verification
 
 ### make vm
 |Output Files|Output Logs|
@@ -87,6 +88,8 @@ Use the package repository to assemble a pre-installed VM image.
 **Note:** For any "*.img" file that is created, this process will also generate *.sha256 and *.md5 checksum files as well.
 
 Optional inputs (environment variables):
+* **SIGNING_KEY** : This is the private key which should be used to sign the IMG file once it is built.
+   * This will also create a "pubkey.pem" file in the output dir which contains the public key for the signature verification
 * **VMPOOLNAME** : Create/use a temporary ZFS pool with this name for the VM build environment.
    * Default Value: "vm-gen-pool"
  
