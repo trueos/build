@@ -699,6 +699,37 @@ EOF
 
 }
 
+sign_file(){
+  # Sign a file with openssl
+  local file="$1"
+
+  if [ -z "${SIGNING_KEY}" ] ; then
+    echo "No signing key provided - skipping signing of file: ${file}"
+    return 0
+  fi
+  echo "Signing file: ${file}"
+  openssl dgst -sha512 -sign "${SIGNING_KEY}" -out "${file}.sig.sha512" "${file}"
+  if [ $? -ne 0 ] ; then
+    echo "ERROR signing file!"
+    return 1
+  fi
+  echo " - Generating pubkey for signature verification"
+  # Need an actual file for the pubkey
+  local keyfile
+  if [ -e "${SIGNING_KEY}" ] ; then
+    keyfile="${SIGNING_KEY}"
+  else
+    keyfile="_internal_priv.key"
+    echo "${SIGNING_KEY}" > "${keyfile}"
+  fi
+  openssl rsa -in "${keyfile}" -pubout -out $(dirname "${file}")/pubkey.pem
+  #Make sure we delete any temporary private key file
+  if [ "${keyfile}" = "_internal_priv.key" ] ; then
+    rm "${keyfile}"
+  fi
+  return 0
+}
+
 clean_iso_dir()
 {
 	if [ ! -d "${ISODIR}" ] ; then
@@ -986,7 +1017,7 @@ mk_iso_file()
 	fi
 	sha256 -q release/iso/${NAME} > release/iso/${NAME}.sha256
 	md5 -q release/iso/${NAME} > release/iso/${NAME}.md5
-
+	sign_file release/iso/${NAME}
 	assemble_file_manifest "release/iso"
 }
 
@@ -1323,7 +1354,7 @@ do_vm_create() {
 	echo "Creating checksums"
 	sha256 -q release/vm/${NAME} > release/vm/${NAME}.sha256
 	md5 -q release/vm/${NAME} > release/vm/${NAME}.md5
-
+	sign_file release/vm/${NAME}
 	assemble_file_manifest "release/vm"
 }
 
