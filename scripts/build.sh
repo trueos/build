@@ -460,6 +460,9 @@ build_poudriere()
 		# Start the build
 		echo "Starting poudriere FULL build"
 		poudriere bulk -a -j $POUDRIERE_BASE -p ${POUDRIERE_PORTS}
+		if [ $? -ne 0 ] ; then
+			exit_err "Failed poudriere build"
+		fi
 		check_essential_pkgs
 		if [ $? -ne 0 ] ; then
 			exit_err "Failed building all essential packages.."
@@ -480,9 +483,27 @@ build_poudriere()
 		if [ $? -ne 0 ] ; then
 			exit_err "Failed poudriere build"
 		fi
+	fi
+	# Assemble the package manifests as needed
+	if [ $(jr -r '."ports"."generate-manifests"' ${TRUEOS_MANIFEST}) = "true" ] ; then
+		echo "Generating Package Manifests"
+		#Cleanup the output directory first
+		local mandir="release/pkg-manifests"
+		if [ -d "${mandir}" ] ; then
+			rm ${mandir}/*
+		else
+			mkdir -p "${mandir}"
+		fi
+		# Copy over the relevant files from the ports tree
+		cp "$(find ${POUDRIERE_PORTDIR} -maxdepth 3 -name MOVED)" ${mandir}/.
+		cp "$(find ${POUDRIERE_PORTDIR} -maxdepth 3 -name UPDATING)" ${mandir}/.
+		cp "$(find ${POUDRIERE_PORTDIR} -maxdepth 3 -name CHANGES)" ${mandir}/.
+		# Assemble a quick list of all the ports/packages that are available in the repo
+		mk_repo_config
+		pkg-static -R tmp/repo-config query -a "%o : %n : %v" > "${mandir}/pkg.list"
 
 	fi
-
+	return 0
 }
 
 clean_poudriere()

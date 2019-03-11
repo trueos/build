@@ -216,6 +216,7 @@ The "ports" target allows for configuring the build targets and options for the 
 * **url** (string) : URL to the repository (svn/git), where to fetch the tar file (tar), or path to directory (local)
 * **local_source** (string) : Path to a local directory where the ports tree should be placed (used for reproducible builds). This directory name will be visible in the output of `uname` on installed systems.
 * **build-all** (boolean) : Build the entire ports collection (true/false)
+* **generate-manifests** (boolean) : Assemble the "pkg-manifests" directory of repo-management files. (true/false)
 * **build** (JSON object) : Lists of packages (by port origin) to build. If "build-all" is true, then this list will be treated as "essential" packages and if any of them fail to build properly then the entire build will be flagged as a failure.
    * **default** (JSON array of strings) : Default list (required)
    * **ENV_VARIABLE** (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name is set
@@ -232,6 +233,7 @@ The "ports" target allows for configuring the build targets and options for the 
   "url" : "https://github.com/trueos/trueos-ports",
   "local_source" : "/usr/ports",
   "build-all" : false,
+  "generate-manifests" : false,
   "build" : {
     "default" : [
       "sysutils/tmux",
