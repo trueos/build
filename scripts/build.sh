@@ -499,25 +499,9 @@ build_poudriere()
 		cp "$(find ${POUDRIERE_PORTDIR} -maxdepth 3 -name UPDATING)" ${mandir}/.
 		cp "$(find ${POUDRIERE_PORTDIR} -maxdepth 3 -name CHANGES)" ${mandir}/.
 		# Assemble a quick list of all the ports/packages that are available in the repo
-		# NOTE: This entire section could be replaced by a single pkg command if we could figure out
-		#  how to manually tell pkg to use this repo for a quick query
-		#  pkg [setup flags] query -a "%o : %n : %v" > "${mandir}/pkg.list
+		mk_repo_config
+		pkg-static -R tmp/repo-config query -a "%o : %n : %v" > "${mandir}/pkg.list"
 
-		# Find the actual dir which contains all the package files
-		local _pkgdir=$(find release/packages -maxdepth 4 -name "All")
-		for _path in `find "${_pkgdir}" -depth 1 -name "*.txz" | sort`
-		do
-			#Cleanup the individual line (directory, suffix)
-			_line=$(basename ${_path} | sed "s|.txz||g")
-			#Make sure it is a valid package name - otherwise skip it
-			case "${_line}" in
-				fbsd-distrib) continue ;;
-				*-*) ;;
-				*) continue ;;
-			esac
-			#Read off the name/version of the package file and put it into the manifest
-			pkg query -F "${_path}" "%o : %n : %v" >> "${mandir}/pkg.list"
-		done
 	fi
 	return 0
 }
