@@ -485,7 +485,7 @@ build_poudriere()
 		fi
 	fi
 	# Assemble the package manifests as needed
-	if [ $(jr -r '."ports"."generate-manifests"' ${TRUEOS_MANIFEST}) = "true" ] ; then
+	if [ $(jq -r '."ports"."generate-manifests"' ${TRUEOS_MANIFEST}) = "true" ] ; then
 		echo "Generating Package Manifests"
 		#Cleanup the output directory first
 		local mandir="release/pkg-manifests"
