@@ -215,6 +215,8 @@ is_ports_dirty()
 
 	# Have we changed branches?
 	if [ "$CURBRANCH" != "${PORTS_BRANCH}" ] ; then
+		echo "Branch change detected, checking out ports fresh"
+		echo -e "y\n" | poudriere ports -d -p ${POUDRIERE_PORTS}
 		return 1
 	fi
 
