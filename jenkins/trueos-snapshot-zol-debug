@@ -54,9 +54,9 @@ pipeline {
     stage('Publish') {
       steps {
         sshagent (credentials: ['ef8c8aff-3b80-4a6a-9e0c-4d015bc5e945']) {
-          sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null syncbot@pkg.trueos.org mkdir -p /data/pkg/snapshot-zol-debug/FreeBSD:13:amd64/latest || true'
+          sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null trueos@cdn1.tn.ixsystems.com mkdir -p /cdn/pkg.trueos.org/pkg/snapshot-zol-debug/FreeBSD:13:amd64/latest || true'
           sh 'cd release/packages && rsync -av --delete-after --delay-updates -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" . trueos@cdn1.tn.ixsystems.com:/cdn/pkg.trueos.org/pkg/snapshot-zol-debug/FreeBSD:13:amd64/latest/'
-          sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null syncbot@pkg.trueos.org mkdir -p /data/iso/snapshot-zol-debug/ || true'
+          sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null trueos@cdn1.tn.ixsystems.com mkdir -p /cdn/pkg.trueos.org/iso/snapshot-zol-debug/ || true'
           sh 'rsync -av --delete-after --delay-updates -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" release/iso/ trueos@cdn1.tn.ixsystems.com:/cdn/pkg.trueos.org/iso/snapshot-zol-debug/'
         }
       }
