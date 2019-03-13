@@ -81,6 +81,9 @@ ISODIR="tmp/iso"
 # Temp pool name to use for VM creation
 VMPOOLNAME="${VMPOOLNAME:-vm-gen-pool}"
 
+#Source the ports-interactions scripts
+. "$(dirname $0)/ports-interactions.sh"
+		
 # Validate that we have a good TRUEOS_MANIFEST and sane build environment
 env_check()
 {
@@ -307,8 +310,6 @@ create_poudriere_ports()
 			exit_err "Failed extracting poudriere ports"
 		fi
 
-		#Source the ports-interactions scripts
-		. "$(dirname $0)/ports-interactions.sh"
 		# Apply any ports overlay
 		apply_ports_overlay "tmp/ports-tree"
 
@@ -318,8 +319,6 @@ create_poudriere_ports()
 		fi
 
         elif [ "${PORTS_TYPE}" = "github-tar" ] ; then
-		#Source the ports-interactions scripts
-		. "$(dirname $0)/ports-interactions.sh"
 		#Now checkout the ports tree and apply the overlay
 		local portsdir=tmp/$(basename -s ".json" "${TRUEOS_MANIFEST}")
 		checkout_gh_ports "${portsdir}"
@@ -334,8 +333,6 @@ create_poudriere_ports()
 
 	else
 		# LOCAL TYPE
-		#Source the ports-interactions scripts
-		. "$(dirname $0)/ports-interactions.sh"
 		# Apply any ports overlay
 		apply_ports_overlay "${PORTS_URL}"
 		# Doing a nullfs mount of existing directory
