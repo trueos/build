@@ -69,8 +69,9 @@ Assemble packages for the OS and any ports listed in the build manifest. These p
 |Output Files|Output Logs|
 |:---:|:---:|
 |release/iso |release/iso-logs |
+|release/update |release/iso-logs/01_offline_update.log |
 
-Use the package repository to assemble an ISO (hybrid DVD/USB image).
+Use the package repository to assemble an ISO (hybrid DVD/USB image). If the "iso" -> "offline_update" field is set to "true" in the build manifest, the release/update directory will also get created for the offline update image and associated checksums.
 
 **Note:** For any "*.iso" file that is created, this process will also generate *.sha256 and *.md5 checksum files as well.
 

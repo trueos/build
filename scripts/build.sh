@@ -200,6 +200,57 @@ create_release_links()
 	ln -fs ${POUDRIERE_PKGLOGS} release/port-logs
 }
 
+assemble_file_manifest(){
+	# Assemble a manifest.json file containing references to all the files in this directory.
+	# INPUTS
+	# $1 : Directory to scan and place the manifest
+	local dir="$1"
+	local mfile="$(dirname ${dir})/manifest.json"
+	local manifest
+	local var
+	for file in `ls "${dir}"` ; do
+		name="$(basename ${file})"
+		var=""
+		case "${name}"
+			*.iso)
+				var="\"iso_file\" : \"${name}\", \"iso_size\" : \"$(ls -lh ${dir}/${name} | cut -w -f 5)\""
+				;;
+			*.img)
+				var="\"img_file\" : \"${name}\", \"img_size\" : \"$(ls -lh ${dir}/${name} | cut -w -f 5)\""
+				;;
+			*.sig.*)
+				var="\"signature_file\" : \"${name}\""
+				;;
+			*.md5)
+				var="\"md5_file\" : \"${name}\", \"md5\" : \"$(cat ${dir}/${name})\""
+				;;
+			*.sha256)
+				var="\"sha256_file\" : \"${name}\", \"sha256\" : \"$(cat ${dir}/${name})\""
+				;;
+		esac
+		if [ -n "${var}" ] ; then
+			if [ -n "${manifest}" ] ; then
+				#Next item in the object
+				manifest="${manifest}, ${var}"
+			else
+				#First item
+				manifest="${var}"
+			fi
+		fi
+	done
+	if [ -n "${manifest}" ] ; then
+		# Also inject the date/time of the current build here
+		local _date=`date -ju "+%Y_%m_%d %H:%M %Z"`
+		local _date_secs=`date -j +%s`
+		manifest="${manifest}, \"build_date\" : \"${_date}\", \"build_date_time_t\" : \"${_date_secs}\""
+		echo "{ ${manifest} }" > "${mfile}"
+		return 0
+	else
+		# No files? Return an error
+		return 1
+	fi
+}
+
 is_ports_dirty()
 {
 	# Does ports tree already exist?
@@ -820,6 +871,7 @@ create_offline_update()
 	fi
 	sha256 -q release/update/${NAME} > release/update/${NAME}.sha256
 	md5 -q release/update/${NAME} > release/update/${NAME}.md5
+	assemble_file_manifest "release/update"
 }
 
 setup_iso_post() {
@@ -968,6 +1020,7 @@ mk_iso_file()
 	sha256 -q release/iso/${NAME} > release/iso/${NAME}.sha256
 	md5 -q release/iso/${NAME} > release/iso/${NAME}.md5
 	sign_file release/iso/${NAME}
+	assemble_file_manifest "release/iso"
 }
 
 check_version()
@@ -1304,6 +1357,7 @@ do_vm_create() {
 	sha256 -q release/vm/${NAME} > release/vm/${NAME}.sha256
 	md5 -q release/vm/${NAME} > release/vm/${NAME}.md5
 	sign_file release/vm/${NAME}
+	assemble_file_manifest "release/vm"
 }
 
 do_iso_create() {
