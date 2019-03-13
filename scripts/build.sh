@@ -391,7 +391,7 @@ create_poudriere_ports()
 
         elif [ "${PORTS_TYPE}" = "github-tar" ] ; then
 		#Now checkout the ports tree and apply the overlay
-		local portsdir=tmp/$(basename -s ".json" "${TRUEOS_MANIFEST}")
+		local portsdir=$(pwd)/tmp/$(basename -s ".json" "${TRUEOS_MANIFEST}")
 		checkout_gh_ports "${portsdir}"
 		if [ $? -ne 0 ] ; then
 			exit_err "Failed fetching poudriere ports: github-tar"
