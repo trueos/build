@@ -29,16 +29,23 @@
 
 export PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
 
+delete_tmp_manifest(){
+	if [ -e "${TRUEOS_MANIFEST}.orig" ] ; then
+		#Put the original manifest file back in place
+		mv "${TRUEOS_MANIFEST}.orig" "${TRUEOS_MANIFEST}"
+	fi
+}
+
 exit_err()
 {
 	echo "ERROR: $1"
+	delete_tmp_manifest
 	if [ -n "$2" ] ; then
 		exit $2
 	else
 		exit 1
 	fi
 }
-
 
 if [ -z "$TRUEOS_MANIFEST" ] ; then
 	if [ -e ".config/manifest" ] ; then
@@ -51,6 +58,14 @@ fi
 
 if [ -z "$TRUEOS_MANIFEST" ] ; then
 	exit_err "Unset TRUEOS_MANIFEST"
+fi
+
+#Perform any directory replacements in the manifest as needed
+grep -q "%%PWD%%" "${TRUEOS_MANIFEST}"
+if [ $? -eq 0 ] ; then
+	echo "Replacing PWD paths in Build Manifest..."
+	cp "${TRUEOS_MANIFEST}" "${TRUEOS_MANIFEST}.orig"
+	sed -i '' "s|%%PWD%%|$(dirname ${TRUEOS_MANIFEST})|g" "${TRUEOS_MANIFEST}"
 fi
 
 CHECK=$(jq -r '."poudriere"."jailname"' $TRUEOS_MANIFEST)
@@ -222,7 +237,7 @@ assemble_file_manifest(){
 	for file in `ls "${dir}"` ; do
 		name="$(basename ${file})"
 		var=""
-		case "${name}"
+		case "${name}" in
 			*.iso)
 				var="\"iso_file\" : \"${name}\", \"iso_size\" : \"$(ls -lh ${dir}/${name} | cut -w -f 5)\""
 				;;
@@ -1453,5 +1468,7 @@ case $1 in
 		;;
 	*) echo "Unknown option selected" ;;
 esac
+
+delete_tmp_manifest
 
 exit 0
