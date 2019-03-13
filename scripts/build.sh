@@ -81,11 +81,17 @@ ISODIR="tmp/iso"
 # Temp pool name to use for VM creation
 VMPOOLNAME="${VMPOOLNAME:-vm-gen-pool}"
 
+#Source the ports-interactions scripts
+. "$(dirname $0)/ports-interactions.sh"
+		
 # Validate that we have a good TRUEOS_MANIFEST and sane build environment
 env_check()
 {
 	echo "Using TRUEOS_MANIFEST: $TRUEOS_MANIFEST" >&2
 	PORTS_TYPE=$(jq -r '."ports"."type"' $TRUEOS_MANIFEST)
+	if [ $? -ne 0 ] ; then
+	  exit_err "Unable to parse manifest: Check JSON syntax"
+	fi
 	PORTS_URL=$(jq -r '."ports"."url"' $TRUEOS_MANIFEST)
 	PORTS_BRANCH=$(jq -r '."ports"."branch"' $TRUEOS_MANIFEST)
 
@@ -97,12 +103,17 @@ env_check()
 			exit_err "Empty ports.branch!"
 		     fi ;;
 		svn) ;;
-              local) ;;
+		github-tar) ;;
+		local) ;;
 		tar) ;;
 		*) exit_err "Unknown or unspecified ports.type!" ;;
 	esac
 
-	if [ -z "$PORTS_URL" ] ; then
+	/usr/bin/which -s poudriere
+	if [ $? -ne 0 ] ; then
+		exit_err "poudriere does not appear to be installed!"
+	fi
+	if [ -z "$PORTS_URL" ] && [ "${PORTS_TYPE}" != "github-overlay" ] ; then
 		exit_err "Empty ports.url!"
 	fi
 
@@ -152,7 +163,7 @@ setup_poudriere_conf()
 		> ${_pdconf}
 	echo "Using zpool: $ZPOOL"
 	echo "ZPOOL=$ZPOOL" >> ${_pdconf}
-	echo "Using Ports Tree: $PORTS_URL"
+	echo "Using Ports Tree: ${POUDRIERE_PORTS}"
 	echo "USE_TMPFS=yes" >> ${_pdconf}
 	echo "BASEFS=$POUDRIERE_BASEFS" >> ${_pdconf}
 	echo "ATOMIC_PACKAGE_REPOSITORY=no" >> ${_pdconf}
@@ -329,11 +340,13 @@ create_poudriere_ports()
 		if [ $? -ne 0 ] ; then
 			exit_err "Failed creating poudriere ports - GIT"
 		fi
+
 	elif [ "$PORTS_TYPE" = "svn" ] ; then
 		poudriere ports -c -p $POUDRIERE_PORTS -m svn -U "${PORTS_URL}" -B $PORTS_BRANCH
 		if [ $? -ne 0 ] ; then
 			exit_err "Failed creating poudriere ports - SVN"
 		fi
+
 	elif [ "$PORTS_TYPE" = "tar" ] ; then
 		echo "Fetching ports tarball"
 		fetch -o tmp/ports.tar ${PORTS_URL}
@@ -350,11 +363,31 @@ create_poudriere_ports()
 			exit_err "Failed extracting poudriere ports"
 		fi
 
+		# Apply any ports overlay
+		apply_ports_overlay "tmp/ports-tree"
+
 		poudriere ports -c -p $POUDRIERE_PORTS -m null -M tmp/ports-tree
 		if [ $? -ne 0 ] ; then
 			exit_err "Failed creating poudriere ports"
 		fi
+
+        elif [ "${PORTS_TYPE}" = "github-tar" ] ; then
+		#Now checkout the ports tree and apply the overlay
+		local portsdir=tmp/$(basename -s ".json" "${TRUEOS_MANIFEST}")
+		checkout_gh_ports "${portsdir}"
+		if [ $? -ne 0 ] ; then
+			exit_err "Failed fetching poudriere ports: github-tar"
+		fi
+		# Now do the nullfs mount into poudriere
+		poudriere ports -c -p $POUDRIERE_PORTS -m null -M "${portsdir}"
+		if [ $? -ne 0 ] ; then
+			exit_err "Failed creating poudriere ports"
+		fi
+
 	else
+		# LOCAL TYPE
+		# Apply any ports overlay
+		apply_ports_overlay "${PORTS_URL}"
 		# Doing a nullfs mount of existing directory
 		poudriere ports -c -p $POUDRIERE_PORTS -m null -M ${PORTS_URL}
 		if [ $? -ne 0 ] ; then
@@ -1104,7 +1137,7 @@ select_manifest()
 	# TODO - Replace this with "dialog" time permitting
 	echo "Please select a default MANIFEST:"
 	COUNT=0
-	for i in $(ls manifests/)
+	for i in $(ls manifests/ | grep ".json")
 	do
 		echo "$COUNT) $i"
 		COUNT=$(expr $COUNT + 1)
@@ -1116,7 +1149,7 @@ select_manifest()
 		exit_err "Invalid option!"
 	fi
 	COUNT=0
-	for i in $(ls manifests/)
+	for i in $(ls manifests/ | grep ".json")
 	do
 		if [ $COUNT -eq $tmp ] ; then
 			MANIFEST=$i
@@ -1130,6 +1163,7 @@ select_manifest()
 		mkdir .config
 	fi
 	echo "$MANIFEST" > .config/manifest
+	echo "New Default Manifest: ${MANIFEST}"
 }
 
 load_vm_settings() {
