@@ -401,7 +401,10 @@ create_poudriere_ports()
 		if [ $? -ne 0 ] ; then
 			exit_err "Failed creating poudriere ports"
 		fi
-
+		# Also fix the internal variable pointing to the location of the ports tree on disk
+		# This is used for checking essential packages later
+		POUDRIERE_PORTDIR=${portsdir}
+		
 	else
 		# LOCAL TYPE
 		# Apply any ports overlay
