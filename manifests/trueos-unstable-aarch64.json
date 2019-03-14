@@ -97,7 +97,6 @@
     "build-all": true,
     "make.conf": {
       "default": [
-        "PKG_NOCOMPRESS=yes"
       ]
     },
     "type": "git",
