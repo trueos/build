@@ -555,6 +555,7 @@ get_pkg_build_list()
 	# Get the explicit packages
 	echo 'os/userland' >> ${1}
 	echo 'os/kernel' >> ${1}
+	echo 'textproc/jq' >> ${1}
 
 	# Sort and remove dups
 	cat ${1} | sort -r | uniq > ${1}.new
