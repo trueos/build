@@ -28,7 +28,6 @@
 #
 
 export PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
-set -xv
 
 delete_tmp_manifest(){
 	if [ -e "${TRUEOS_MANIFEST}.orig" ] ; then
@@ -47,6 +46,35 @@ exit_err()
 		exit 1
 	fi
 }
+
+get_architecture()
+{
+  if jq -e -r '."arch"' $TRUEOS_MANIFEST 2>&1 >/dev/null ; then
+    export ARCH="$(jq -r '."arch"."arch"' $TRUEOS_MANIFEST)"
+    if jq -e -r '."arch"."platform"' $TRUEOS_MANIFEST 2>&1 >/dev/null ; then
+      export PLATFORM="$(jq -r '."arch"."platform"' $TRUEOS_MANIFEST)"
+    else
+      export PLATFORM="${ARCH}"
+    fi
+  else
+    export ARCH="native"
+    export PLATFORM=""
+  fi 
+  echo $PLATFORM.$ARCH
+}
+
+get_arch()
+{
+ arch=$(echo "$(get_architecture)" | cut -d'.' -f2)
+ echo "${arch}"
+}
+
+get_platform()
+{
+ platform=$(echo "$(get_architecture)" | cut -d'.' -f1)
+ echo "${platform}"
+}
+
 
 if [ -z "$TRUEOS_MANIFEST" ] ; then
 	if [ -e ".config/manifest" ] ; then
@@ -77,10 +105,15 @@ CHECK=$(jq -r '."poudriere"."portsname"' $TRUEOS_MANIFEST)
 if [ -n "$CHECK" -a "$CHECK" != "null" ] ; then
 	POUDRIERE_PORTS="$CHECK"
 fi
+ARCH="$(echo -$(get_arch))"
+if [ "${ARCH}" == "-native" ] ; then
+ ARCH=""
+fi
 
 # Set our important defaults
 POUDRIERE_BASEFS=${POUDRIERE_BASEFS:-/usr/local/poudriere}
-POUDRIERE_BASE=${POUDRIERE_BASE:-trueos-mk-base}
+POUDRIERE_BASE=${POUDRIERE_BASE:-trueos-mk-base%%ARCH%%}
+POUDRIERE_BASE=$( echo ${POUDRIERE_BASE} | sed "s|%%ARCH%%|${ARCH}|g" )
 POUDRIERE_PORTS=${POUDRIERE_PORTS:-trueos-mk-ports}
 PKG_CMD=${PKG_CMD:-pkg-static}
 
@@ -1163,33 +1196,6 @@ get_os_port_flags()
 	echo "$WF"
 }
 
-get_architecture()
-{
-  if jq -e -r '."arch"' $TRUEOS_MANIFEST 2>&1 >/dev/null ; then
-    export ARCH="$(jq -r '."arch"."arch"' $TRUEOS_MANIFEST)"
-    if jq -e -r '."arch"."platform"' $TRUEOS_MANIFEST 2>&1 >/dev/null ; then
-      export PLATFORM="$(jq -r '."arch"."platform"' $TRUEOS_MANIFEST)"
-    else
-      export PLATFORM="${ARCH}"
-    fi
-  else
-    export ARCH="native"
-    export PLATFORM=""
-  fi 
-  echo $PLATFORM.$ARCH
-}
-
-get_arch()
-{
- arch=$(echo "$(get_architecture)" | cut -d'.' -f2)
- echo "${arch}"
-}
-
-get_platform()
-{
- platform=$(echo "$(get_architecture)" | cut -d'.' -f1)
- echo "${platform}"
-}
 
 get_world_flags()
 {
