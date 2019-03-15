@@ -1054,9 +1054,10 @@ apply_iso_config()
 
 mk_iso_file()
 {
-	if [ ! -d "release/iso" ] ; then
-		mkdir -p release/iso
+	if [ -d "release/iso" ] ; then
+		rm -rf release/iso
 	fi
+	mkdir -p release/iso
 	NAME="release/iso/install.iso"
 	sh scripts/mkisoimages.sh -b INSTALLER ${NAME} ${ISODIR} || exit_err "Unable to create ISO"
 
