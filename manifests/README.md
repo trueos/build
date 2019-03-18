@@ -81,6 +81,8 @@ The "iso" target within the manifest controls all the options specific to creati
    * **default** (JSON array of strings) : Default list (required)
    * **ENV_VARIABLE** (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name exists.
 * **offline-update** (boolean) : If set to true will generate a system-update.img file containing ISOs dist files
+* **generate-manifest** (boolean) : If set to true, will generate a "manifest.json" file containing references or contents of all the files in the ISO output directory.
+* **generate-update-manifest** (boolean) : If set to true, will generate a "manifest.json" file containing references or contents of all the files in the offline-update output directory.
 * **optional-dist-packages** (JSON object) : Lists of packages (by port origin) to have available in .txz form on the ISO. These ones are considered "optional" and may or may not be included depending on whether the package built successfully.
    * **default** (JSON array of strings) : Default list (required)
    * **ENV_VARIABLE** (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name exists.
@@ -195,6 +197,7 @@ The "vm" target is used to provide custom settings when assembling a VM image wi
    * **NOTE:** If this field is missing, it will use the "iso" version of the "auto-install-packages" field as a fallback list.
    * **default** (JSON array of strings) : Default list (required)
    * **ENV_VARIABLE** (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name exists.
+* **generate-manifest** (boolean) : If set to true, will generate a "manifest.json" file containing references or contents of all the files in the VM output directory.
 
 #### VM Example
 ```
