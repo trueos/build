@@ -928,7 +928,10 @@ create_offline_update()
 	fi
 	sha256 -q release/update/${NAME} > release/update/${NAME}.sha256
 	md5 -q release/update/${NAME} > release/update/${NAME}.md5
-	assemble_file_manifest "release/update"
+
+	if [ $(jq -r '."iso"."generate-update-manifest"' ${TRUEOS_MANIFEST}) = "true" ] ; then
+		assemble_file_manifest "release/update"
+	fi
 }
 
 setup_iso_post() {
@@ -1078,7 +1081,9 @@ mk_iso_file()
 	sha256 -q release/iso/${NAME} > release/iso/${NAME}.sha256
 	md5 -q release/iso/${NAME} > release/iso/${NAME}.md5
 	sign_file release/iso/${NAME}
-	assemble_file_manifest "release/iso"
+	if [ $(jq -r '."iso"."generate-manifest"' ${TRUEOS_MANIFEST}) = "true" ] ; then
+		assemble_file_manifest "release/iso"
+	fi
 }
 
 check_version()
@@ -1416,7 +1421,9 @@ do_vm_create() {
 	sha256 -q release/vm/${NAME} > release/vm/${NAME}.sha256
 	md5 -q release/vm/${NAME} > release/vm/${NAME}.md5
 	sign_file release/vm/${NAME}
-	assemble_file_manifest "release/vm"
+	if [ $(jq -r '."vm"."generate-manifest"' ${TRUEOS_MANIFEST}) = "true" ] ; then
+		assemble_file_manifest "release/vm"
+	fi
 }
 
 do_iso_create() {
