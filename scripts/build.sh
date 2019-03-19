@@ -280,6 +280,7 @@ assemble_file_manifest(){
 is_ports_dirty()
 {
 	# Does ports tree already exist?
+        echo "Scanning for existing ports tree: ${POUDRIERE_PORTS}"
 	poudriere ports -l 2>/dev/null | grep -q -w ${POUDRIERE_PORTS}
 	if [ $? -ne 0 ]; then
 		echo "Ports tree does not exist yet: ${POUDRIERE_PORTS}"
