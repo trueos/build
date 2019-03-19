@@ -232,6 +232,7 @@ assemble_file_manifest(){
 	# $1 : Directory to scan and place the manifest
 	local dir="$1"
 	local mfile="$(dirname ${dir})/manifest.json"
+        echo "Assemble file manifest: ${mfile}"
 	local manifest
 	local var
 	for file in `ls "${dir}"` ; do
@@ -273,6 +274,7 @@ assemble_file_manifest(){
 		return 0
 	else
 		# No files? Return an error
+		echo " [ERROR] Could not assemble file manifest: ${mfile}"
 		return 1
 	fi
 }
