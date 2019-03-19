@@ -167,6 +167,11 @@ setup_poudriere_conf()
 	if [ $? -ne 0 ] ; then
 		echo "ZPOOL=$ZPOOL" >> /usr/local/etc/poudriere.conf
 	fi
+	#Ensure that the basefs variable is setup as well - needed for iterative builds.
+	grep -q "^BASEFS=" /usr/local/etc/poudriere.conf
+	if [ $? -ne 0 ] ; then
+		echo "BASEFS=$POUDRIERE_BASEFS" >> /usr/local/etc/poudriere.conf
+	fi
 
 	# Copy the systems poudriere.conf over
 	cat /usr/local/etc/poudriere.conf.sample \
