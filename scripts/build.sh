@@ -574,9 +574,11 @@ build_poudriere()
 		# Start the build
 		echo "Starting poudriere FULL build"
 		poudriere bulk -a -j $POUDRIERE_BASE -p ${POUDRIERE_PORTS}
-		if [ $? -ne 0 ] ; then
-			exit_err "Failed poudriere build"
-		fi
+		# Do not exit if non-zero : poudriere report non-zero return if *any* ports fail to build
+		#   and a bulk/full build is almost guaranteed to have some failures.
+		#if [ $? -ne 0 ] ; then
+		#	exit_err "Failed poudriere build"
+		#fi
 		check_essential_pkgs
 		if [ $? -ne 0 ] ; then
 			exit_err "Failed building all essential packages.."
