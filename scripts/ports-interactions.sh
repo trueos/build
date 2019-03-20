@@ -88,8 +88,8 @@ register_ports_categories(){
   # Inputs:
   # $1 : List of categories separated by spaces ("cat1 cat2 cat3")
   # $2 : local path to ports tree
-  echo "Registering Categories: ${1}"
-  echo " - Ports Dir: ${2}"
+  echo "[INFO] Registering Categories: ${1}"
+  #echo " - Ports Dir: ${2}"
   local PORTSDIR="$2"
   local _conf="${PORTSDIR}/Mk/bsd.port.mk"
   if [ ! -e "${_conf}" ] ; then
@@ -122,7 +122,7 @@ add_cat_to_ports(){
   #Verify that the Makefile for the new category is accurate
   validate_portcat_makefile "${PORTSDIR}/${1}"
   #Enable the directory in the top-level Makefile
-  validate_port_makefile "${1}"
+  validate_port_makefile "${1}" "${PORTSDIR}"
 }
 
 add_port_to_ports(){
