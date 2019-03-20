@@ -88,6 +88,8 @@ register_ports_categories(){
   # Inputs:
   # $1 : List of categories separated by spaces ("cat1 cat2 cat3")
   # $2 : local path to ports tree
+  echo "Registering Categories: ${1}"
+  echo " - Ports Dir: ${2}"
   local PORTSDIR="$2"
   local _conf="${PORTSDIR}/Mk/bsd.port.mk"
   if [ ! -e "${_conf}" ] ; then
