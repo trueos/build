@@ -912,9 +912,11 @@ create_iso_dir()
 create_offline_update()
 {
 	local NAME="system-update.img"
-	if [ ! -d "release/update" ] ; then
-		mkdir -p release/update
+	if [ -d "release/update" ] ; then
+		#Remove old build artifacts
+		rm -r "release/update"
 	fi
+	mkdir -p release/update
 	echo "Creating ${NAME}..."
 	makefs release/update/${NAME} ${PKG_DISTDIR}
 	if [ $? -ne 0 ] ; then
