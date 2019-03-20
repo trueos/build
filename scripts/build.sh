@@ -236,7 +236,7 @@ assemble_file_manifest(){
 	# INPUTS
 	# $1 : Directory to scan and place the manifest
 	local dir="$1"
-	local mfile="$(dirname ${dir})/manifest.json"
+	local mfile="${dir}/manifest.json"
         echo "Assemble file manifest: ${mfile}"
 	local manifest
 	local var
