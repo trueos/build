@@ -340,6 +340,14 @@ setup_poudriere_ports()
 		fi
 	fi
 
+	# If TRUEOS_MANIFEST is set, copy to ports for later os/manifest to ingest
+	if [ -n "$TRUEOS_MANIFEST" ] ; then
+		if [ ! -d "${POUDRIERE_PORTDIR}/local_source" ] ; then
+			mkdir -p ${POUDRIERE_PORTDIR}/local_source
+		fi
+		cp ${TRUEOS_MANIFEST} ${POUDRIERE_PORTDIR}/local_source/trueos-manifest.json
+	fi
+
 	# Add any list of files to strip from port plists
 	# Verify we have anything to strip in our MANIFEST
 	if [ "$(jq -r '."base-packages"."strip-plist" | length' $TRUEOS_MANIFEST)" != "0" ] ; then
