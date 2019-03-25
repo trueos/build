@@ -342,10 +342,14 @@ setup_poudriere_ports()
 
 	# If TRUEOS_MANIFEST is set, copy to ports for later os/manifest to ingest
 	if [ -n "$TRUEOS_MANIFEST" ] ; then
+		echo "Copying build manifest into ports tree"
 		if [ ! -d "${POUDRIERE_PORTDIR}/local_source" ] ; then
 			mkdir -p ${POUDRIERE_PORTDIR}/local_source
 		fi
 		cp ${TRUEOS_MANIFEST} ${POUDRIERE_PORTDIR}/local_source/trueos-manifest.json
+		if [ $? -ne 0 ] ; then
+			exit_err "Failed copying manifest into ports -> ${POUDRIERE_PORTDIR}/local_source"
+		fi
 	fi
 
 	# Add any list of files to strip from port plists
