@@ -29,13 +29,6 @@
 
 export PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
 
-delete_tmp_manifest(){
-	if [ -e "${TRUEOS_MANIFEST}.orig" ] ; then
-		#Put the original manifest file back in place
-		mv "${TRUEOS_MANIFEST}.orig" "${TRUEOS_MANIFEST}"
-	fi
-}
-
 exit_err()
 {
 	echo "ERROR: $1"
@@ -46,6 +39,35 @@ exit_err()
 		exit 1
 	fi
 }
+
+get_architecture()
+{
+  if jq -e -r '."arch"' $TRUEOS_MANIFEST 2>&1 >/dev/null ; then
+    export ARCH="$(jq -r '."arch"."arch"' $TRUEOS_MANIFEST)"
+    if jq -e -r '."arch"."platform"' $TRUEOS_MANIFEST 2>&1 >/dev/null ; then
+      export PLATFORM="$(jq -r '."arch"."platform"' $TRUEOS_MANIFEST)"
+    else
+      export PLATFORM="${ARCH}"
+    fi
+  else
+    export ARCH="native"
+    export PLATFORM=""
+  fi 
+  echo $PLATFORM.$ARCH
+}
+
+get_arch()
+{
+ arch=$(echo "$(get_architecture)" | cut -d'.' -f2)
+ echo "${arch}"
+}
+
+get_platform()
+{
+ platform=$(echo "$(get_architecture)" | cut -d'.' -f1)
+ echo "${platform}"
+}
+
 
 if [ -z "$TRUEOS_MANIFEST" ] ; then
 	if [ -e ".config/manifest" ] ; then
@@ -76,10 +98,15 @@ CHECK=$(jq -r '."poudriere"."portsname"' $TRUEOS_MANIFEST)
 if [ -n "$CHECK" -a "$CHECK" != "null" ] ; then
 	POUDRIERE_PORTS="$CHECK"
 fi
+ARCH="$(echo -$(get_arch))"
+if [ "${ARCH}" == "-native" ] ; then
+ ARCH=""
+fi
 
 # Set our important defaults
 POUDRIERE_BASEFS=${POUDRIERE_BASEFS:-/usr/local/poudriere}
-POUDRIERE_BASE=${POUDRIERE_BASE:-trueos-mk-base}
+POUDRIERE_BASE=${POUDRIERE_BASE:-trueos-mk-base%%ARCH%%}
+POUDRIERE_BASE=$( echo ${POUDRIERE_BASE} | sed "s|%%ARCH%%|${ARCH}|g" )
 POUDRIERE_PORTS=${POUDRIERE_PORTS:-trueos-mk-ports}
 PKG_CMD=${PKG_CMD:-pkg-static}
 
@@ -531,7 +558,12 @@ setup_poudriere_jail()
 
 	export KERNEL_MAKE_FLAGS="$(get_kernel_flags)"
 	export WORLD_MAKE_FLAGS="$(get_world_flags)"
-	poudriere jail -c -j $POUDRIERE_BASE -m ports=${POUDRIERE_PORTS} -v ${TRUEOS_VERSION}
+        export ARCHITECTURE="$(get_architecture)"
+        if [ $ARCHITECTURE == ".native" ] ; then
+		poudriere jail -c -j $POUDRIERE_BASE -m ports=${POUDRIERE_PORTS} -v ${TRUEOS_VERSION}
+        else
+		poudriere jail -c -j $POUDRIERE_BASE -m ports=${POUDRIERE_PORTS} -v ${TRUEOS_VERSION} -a ${ARCHITECTURE}
+        fi
 	if [ $? -ne 0 ] ; then
 		exit 1
 	fi
@@ -1169,6 +1201,11 @@ get_world_flags()
 			WF="$WF ${i}"
 		done
 	done
+        arch="$(get_arch)"
+        if [ "${arch}" != "native" ]; then
+          WF="$WF TARGET_ARCH=${arch}"
+          WF="$WF TARGET=$(get_platform)"
+        fi
 	echo "$WF"
 }
 
@@ -1184,6 +1221,11 @@ get_kernel_flags()
 			KF="$KF ${i}"
 		done
 	done
+        arch="$(get_arch)"
+        if [ "${arch}" != "native" ]; then
+          KF="$KF TARGET_ARCH=${arch}"
+          KF="$KF TARGET=$(get_platform)"
+        fi
 	echo "$KF"
 }
 
