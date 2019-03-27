@@ -25,7 +25,10 @@ pipeline {
     stage('Build') {
       post {
         always {
-          archiveArtifacts artifacts: 'release/port-logs/latest/logs/errors/**', fingerprint: true
+          sh 'if [ -d release/port-logs-errors ] ; then rm -r release/port-logs-errors ; fi'
+          sh 'mkdir -p release/port-logs-errors'
+          sh 'cp release/port-logs/latest/logs/errors/* release/port-logs-errors/.'
+          archiveArtifacts artifacts: 'release/port-logs-errors/**', fingerprint: true
           archiveArtifacts artifacts: 'release/src-logs/**', fingerprint: true
         }
       }
