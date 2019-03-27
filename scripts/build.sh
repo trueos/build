@@ -29,6 +29,14 @@
 
 export PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
 
+delete_tmp_manifest(){	
+ 	if [ -e "${TRUEOS_MANIFEST}.orig" ] ; then	
+		#Put the original manifest file back in place	
+		mv "${TRUEOS_MANIFEST}.orig" "${TRUEOS_MANIFEST}"	
+	fi	
+}	
+
+
 exit_err()
 {
 	echo "ERROR: $1"
