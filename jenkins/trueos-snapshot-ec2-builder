@@ -27,9 +27,9 @@ pipeline {
         always {
           sh 'if [ -d release/port-logs-errors ] ; then rm -r release/port-logs-errors ; fi'
           sh 'mkdir -p release/port-logs-errors'
-          sh 'cp release/port-logs/latest/logs/errors/* release/port-logs-errors/.'
-          archiveArtifacts artifacts: 'release/port-logs-errors/**', fingerprint: true
-          archiveArtifacts artifacts: 'release/src-logs/**', fingerprint: true
+          sh 'cp release/port-logs/latest/logs/errors/* release/port-logs-errors/ || true'
+          archiveArtifacts artifacts: 'release/port-logs-errors/**', fingerprint: false
+          archiveArtifacts artifacts: 'release/src-logs/**', fingerprint: false
         }
       }
       environment {
