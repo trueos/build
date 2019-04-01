@@ -33,7 +33,10 @@
 		"file-name": "TrueOS-Snapshot-Builder-x64-%%GITHASH%%-%%DATE%%",
 		"install-script": "",
 		"iso-packages": {
-			"default": []
+			"default": [
+				"sysutils/pc-installdialog",
+				"sysutils/pc-sysinstall"
+			]
 		},
 		"overlay": {
 		},

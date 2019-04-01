@@ -16,6 +16,13 @@ if [ -e "/var/db/trueos-manifest.json" ] ; then
     BRAND="${_tmp}"
   fi
 fi
+
+if [ -e "/usr/local/sbin/pc-installdialog" ] ; then
+	PCINSTALL="/usr/local/sbin/pc-installdialog"
+else
+	PCINSTALL="/usr/sbin/pc-installdialog"
+fi
+
 # resolv.conf from DHCP ends up in here, so make sure the directory exists
 mkdir /tmp/install_etc
 
@@ -101,7 +108,7 @@ $DIALOG_OK)	# Install
 	fi
 
 	trap true SIGINT	# Ignore cntrl-C here
-	pc-installdialog
+	${PCINSTALL}
 	if [ $? -eq 0 ]; then
 		dialog --backtitle "${BRAND} Installer" --title "Complete" --yes-label "Reboot" --no-label "Live CD" --yesno "Installation of ${BRAND} complete! Would you like to reboot into the installed system now?" 0 0 && reboot
 	else
