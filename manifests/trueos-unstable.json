@@ -31,7 +31,10 @@
 		"file-name": "TrueOS-Unstable-x64-%%DATE%%",
 		"install-script": "",
 		"iso-packages": {
-			"default": []
+			"default": [
+				"sysutils/pc-installdialog",
+				"sysutils/pc-sysinstall"
+			]
 		},
 		"overlay": {
 		},

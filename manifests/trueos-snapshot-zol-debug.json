@@ -34,6 +34,8 @@
     "install-script": "",
     "iso-packages": {
       "default": [
+	      "sysutils/pc-installdialog",
+	      "sysutils/pc-sysinstall",
 	      "sysutils/zol"
       ]
     },
