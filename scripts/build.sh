@@ -370,6 +370,15 @@ setup_poudriere_ports()
 		jq -r '."ports"."make.conf"."'$c'" | join("\n")' ${TRUEOS_MANIFEST} >>${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
 	done
 
+	# See if a particular version of the base sources is specified
+	#  and ensure the base ports are all pointing to the right branch of the OS repo
+	if [ -e "${POUDRIERE_PORTDIR}/update-branch-os.sh" ] ; then
+		local os_branch=$(jq -r '."base-packages"."trueos-branch"' ${TRUEOS_MANIFEST})
+		if [ -n "${os_branch}" ] && [ "${os_branch}" != "null" ] ; then
+			echo "Adjusting TrueOS version branch: ${os_branch}"
+			(cd "${POUDRIERE_PORTDIR}" && ./update-branch-os.sh "os" "${os_branch}")
+		fi
+	fi
 }
 
 create_poudriere_ports()

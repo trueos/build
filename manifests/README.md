@@ -30,6 +30,9 @@ The "base-packages" target allows the configuration of the OS packages itself. T
    * **ENV_VARIABLE** (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name exists.
    * ***WARNING:*** The only kernel flag that should be optionally set here is the "KERNCONF" setting for selecting a custom kernel configuration. All other world/kernel options are exposed via port options on the "buildworld" and "buildkernel" ports and should be modified in the "ports -> make.conf" section of the manifest.
 * **strip-plist** (JSON array of strings) :  List of directories or files that need to be removed from the base-packages.
+* **trueos-branch** (string) : Supply a branch name from the trueos/trueos github repository to use for the OS branch.
+   * This will ensure that all the base packages use the version of the OS that comes from this branch.
+   * If unset, the build will use whichever version of the base packages are currently set in the ports tree.
 
 #### Base Packages Example
 ```
