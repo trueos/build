@@ -10,7 +10,8 @@
 			"default": [
 				"KERNCONF=GENERIC-NODEBUG"
 			]
-		}
+		},
+		"trueos-branch":"freebsd/master"
 	},
 	"iso": {
 		"auto-install-packages": {
