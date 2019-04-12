@@ -29,12 +29,13 @@
 
 export PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
 
-delete_tmp_manifest(){
-	if [ -e "${TRUEOS_MANIFEST}.orig" ] ; then
-		#Put the original manifest file back in place
-		mv "${TRUEOS_MANIFEST}.orig" "${TRUEOS_MANIFEST}"
-	fi
-}
+delete_tmp_manifest(){	
+	if [ -e "${TRUEOS_MANIFEST}.orig" ] ; then	
+		#Put the original manifest file back in place	
+		mv "${TRUEOS_MANIFEST}.orig" "${TRUEOS_MANIFEST}"	
+	fi	
+}	
+
 
 exit_err()
 {
@@ -46,6 +47,32 @@ exit_err()
 		exit 1
 	fi
 }
+
+get_architecture()
+{
+	if jq -e -r '."arch"' $TRUEOS_MANIFEST 2>&1 >/dev/null ; then
+		local arch="$(jq -r '."arch"."arch"' $TRUEOS_MANIFEST)"
+		if jq -e -r '."arch"."platform"' $TRUEOS_MANIFEST 2>&1 >/dev/null ; then
+			local platform="$(jq -r '."arch"."platform"' $TRUEOS_MANIFEST)"
+		else
+			local platform="${arch}"
+		fi
+	else
+		local arch="native"
+	fi 
+	echo $platform.$arch
+}
+
+get_arch()
+{
+	get_architecture | cut -d'.' -f2
+}
+
+get_platform()
+{
+	get_architecture | cut -d'.' -f1
+}
+
 
 if [ -z "$TRUEOS_MANIFEST" ] ; then
 	if [ -e ".config/manifest" ] ; then
@@ -77,9 +104,14 @@ if [ -n "$CHECK" -a "$CHECK" != "null" ] ; then
 	POUDRIERE_PORTS="$CHECK"
 fi
 
+local platform="$(get_platform)"
+
+
 # Set our important defaults
 POUDRIERE_BASEFS=${POUDRIERE_BASEFS:-/usr/local/poudriere}
-POUDRIERE_BASE=${POUDRIERE_BASE:-trueos-mk-base}
+POUDRIERE_BASE=${POUDRIERE_BASE:-trueos-mk-base%%ARCH%%}
+#Using platform as it is should match or be more unique then arch
+POUDRIERE_BASE=$( echo ${POUDRIERE_BASE} | sed "s|%%ARCH%%|${platform}|g" )
 POUDRIERE_PORTS=${POUDRIERE_PORTS:-trueos-mk-ports}
 PKG_CMD=${PKG_CMD:-pkg-static}
 
@@ -237,7 +269,7 @@ assemble_file_manifest(){
 	# $1 : Directory to scan and place the manifest
 	local dir="$1"
 	local mfile="${dir}/manifest.json"
-        echo "Assemble file manifest: ${mfile}"
+	echo "Assemble file manifest: ${mfile}"
 	local manifest
 	local var
 	for file in `ls "${dir}"` ; do
@@ -287,7 +319,7 @@ assemble_file_manifest(){
 is_ports_dirty()
 {
 	# Does ports tree already exist?
-        echo "Scanning for existing ports tree: ${POUDRIERE_PORTS}"
+	echo "Scanning for existing ports tree: ${POUDRIERE_PORTS}"
 	poudriere ports -l 2>/dev/null | grep -q -w ${POUDRIERE_PORTS}
 	if [ $? -ne 0 ]; then
 		echo "Ports tree does not exist yet: ${POUDRIERE_PORTS}"
@@ -421,7 +453,7 @@ create_poudriere_ports()
 			exit_err "Failed creating poudriere ports"
 		fi
 
-        elif [ "${PORTS_TYPE}" = "github-tar" ] ; then
+	elif [ "${PORTS_TYPE}" = "github-tar" ] ; then
 		#Now checkout the ports tree and apply the overlay
 		local portsdir=$(pwd)/tmp/$(basename -s ".json" "${TRUEOS_MANIFEST}")
 		checkout_gh_ports "${portsdir}"
@@ -540,7 +572,12 @@ setup_poudriere_jail()
 
 	export KERNEL_MAKE_FLAGS="$(get_kernel_flags)"
 	export WORLD_MAKE_FLAGS="$(get_world_flags)"
-	poudriere jail -c -j $POUDRIERE_BASE -m ports=${POUDRIERE_PORTS} -v ${TRUEOS_VERSION}
+	architecture="$(get_architecture)"
+	if [ $architecture == ".native" ] ; then
+		poudriere jail -c -j $POUDRIERE_BASE -m ports=${POUDRIERE_PORTS} -v ${TRUEOS_VERSION}
+	else
+		poudriere jail -c -j $POUDRIERE_BASE -m ports=${POUDRIERE_PORTS} -v ${TRUEOS_VERSION} -a ${architecture}
+	fi
 	if [ $? -ne 0 ] ; then
 		exit 1
 	fi
@@ -730,7 +767,6 @@ check_essential_pkgs()
 	local _missingpkglist=""
 	for i in $ESSENTIAL
 	do
-
 		if [ ! -d "${POUDRIERE_PORTDIR}/${i}" ] ; then
 			echo "WARNING: Invalid PORT: $i"
 			_missingpkglist="${_missingpkglist} ${i}"
@@ -754,11 +790,11 @@ check_essential_pkgs()
 		else
 			echo "Verified: ${pkgName}"
 		fi
-   done
-   if [ $haveWarn -eq 1 ] ; then
-     echo "WARNING: Essential Packages Missing: ${_missingpkglist}"
-   fi
-   return $haveWarn
+	done
+	if [ $haveWarn -eq 1 ] ; then
+		echo "WARNING: Essential Packages Missing: ${_missingpkglist}"
+	fi
+	return $haveWarn
 }
 
 clean_jails()
@@ -791,34 +827,34 @@ EOF
 }
 
 sign_file(){
-  # Sign a file with openssl
-  local file="$1"
+	# Sign a file with openssl
+	local file="$1"
 
-  if [ -z "${SIGNING_KEY}" ] ; then
-    echo "No signing key provided - skipping signing of file: ${file}"
-    return 0
-  fi
-  echo "Signing file: ${file}"
-  openssl dgst -sha512 -sign "${SIGNING_KEY}" -out "${file}.sig.sha512" "${file}"
-  if [ $? -ne 0 ] ; then
-    echo "ERROR signing file!"
-    return 1
-  fi
-  echo " - Generating pubkey for signature verification"
-  # Need an actual file for the pubkey
-  local keyfile
-  if [ -e "${SIGNING_KEY}" ] ; then
-    keyfile="${SIGNING_KEY}"
-  else
-    keyfile="_internal_priv.key"
-    echo "${SIGNING_KEY}" > "${keyfile}"
-  fi
-  openssl rsa -in "${keyfile}" -pubout -out $(dirname "${file}")/pubkey.pem
-  #Make sure we delete any temporary private key file
-  if [ "${keyfile}" = "_internal_priv.key" ] ; then
-    rm "${keyfile}"
-  fi
-  return 0
+	if [ -z "${SIGNING_KEY}" ] ; then
+		echo "No signing key provided - skipping signing of file: ${file}"
+		return 0
+	fi
+	echo "Signing file: ${file}"
+	openssl dgst -sha512 -sign "${SIGNING_KEY}" -out "${file}.sig.sha512" "${file}"
+	if [ $? -ne 0 ] ; then
+		echo "ERROR signing file!"
+		return 1
+	fi
+	echo " - Generating pubkey for signature verification"
+	# Need an actual file for the pubkey
+	local keyfile
+	if [ -e "${SIGNING_KEY}" ] ; then
+		keyfile="${SIGNING_KEY}"
+	else
+		keyfile="_internal_priv.key"
+		echo "${SIGNING_KEY}" > "${keyfile}"
+	fi
+	openssl rsa -in "${keyfile}" -pubout -out $(dirname "${file}")/pubkey.pem
+	#Make sure we delete any temporary private key file
+	if [ "${keyfile}" = "_internal_priv.key" ] ; then
+		rm "${keyfile}"
+	fi
+	return 0
 }
 
 clean_iso_dir()
@@ -1178,6 +1214,11 @@ get_world_flags()
 			WF="$WF ${i}"
 		done
 	done
+	arch="$(get_arch)"
+	if [ "${arch}" != "native" ]; then
+		WF="$WF TARGET_ARCH=${arch}"
+		WF="$WF TARGET=$(get_platform)"
+	fi
 	echo "$WF"
 }
 
@@ -1193,6 +1234,11 @@ get_kernel_flags()
 			KF="$KF ${i}"
 		done
 	done
+	arch="$(get_arch)"
+	if [ "${arch}" != "native" ]; then
+		KF="$KF TARGET_ARCH=${arch}"
+		KF="$KF TARGET=$(get_platform)"
+	fi
 	echo "$KF"
 }
 
