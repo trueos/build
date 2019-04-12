@@ -86,7 +86,7 @@
 	"pkg-repo-name": "FreeBSD",
 	"pkg-train-name": "pkgbase",
 	"ports": {
-		"branch": "freebsd/master",
+		"branch": "trueos-master",
 		"build": {
 			"default": [
 				"devel/git",
