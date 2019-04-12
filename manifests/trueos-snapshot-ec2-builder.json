@@ -15,6 +15,7 @@
 	"iso": {
 		"auto-install-packages": {
 			"default": [
+				"archivers/pxz",
 				"devel/gmake",
 				"devel/git-lite",
 				"devel/hub",
