@@ -65,6 +65,7 @@
 			]
 		}
 	},
+	"os-name":"FreeBSD",
 	"pkg-repo": {
 		"pubKey": [
 			"-----BEGIN PUBLIC KEY-----",
