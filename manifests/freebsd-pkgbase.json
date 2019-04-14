@@ -55,6 +55,7 @@
 				"/usr/bin/llvm*",
 				"/usr/bin/objdump*",
 				"/usr/bin/svn*",
+				"/usr/lib/*.a",
 				"/usr/lib/clang",
 				"/usr/share/man",
 				"/usr/share/i18n",
@@ -83,7 +84,7 @@
 		],
 		"url": "https://pkg.trueos.org/pkg/freebsd-pkgbase/${ABI}/latest"
 	},
-	"pkg-repo-name": "FreeBSD",
+	"pkg-repo-name": "FreeBSD-pkgbase",
 	"pkg-train-name": "pkgbase",
 	"ports": {
 		"branch": "trueos-master",
