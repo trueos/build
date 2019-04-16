@@ -1525,6 +1525,9 @@ do_iso_create() {
 	mk_iso_file >release/iso-logs/04_mk_iso_fil.log 2>&1
 }
 
+# Set a time stamp at start that can be used elsewhere
+export BUILD_EPOCH_TIME=$(date '+%s')
+
 for d in tmp release
 do
 	if [ ! -d "${d}" ] ; then
