@@ -224,6 +224,7 @@ setup_poudriere_conf()
 	echo "ALLOW_MAKE_JOBS_PACKAGES=\"chromium* iridium* aws-sdk* gcc* webkit* llvm* clang* firefox* ruby* cmake* rust* qt5-web* phantomjs* swift* perl5* py*\"" >> ${_pdconf}
 	echo "PRIORITY_BOOST=\"pypy* openoffice* iridium* chromium* aws-sdk* libreoffice*\"" >> ${_pdconf}
 
+	# Set all the make config variables from our build
 	if [ "$(jq -r '."poudriere-conf" | length' ${TRUEOS_MANIFEST})" != "0" ] ; then
 		jq -r '."poudriere-conf" | join("\n")' ${TRUEOS_MANIFEST} >> ${_pdconf}
 	fi
@@ -243,6 +244,7 @@ setup_poudriere_conf()
 
 	# Set the TRUEOS_MANIFEST location for os/* build ports
 	echo "TRUEOS_MANIFEST=${TRUEOS_MANIFEST}" > ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
+
 	# Save kernel/world flags as well
 	get_world_flags | sed 's|^ ||g' | tr -s ' ' '\n' >> ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
 	get_kernel_flags | sed 's|^ ||g' | tr -s ' ' '\n' >> ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
@@ -401,6 +403,9 @@ setup_poudriere_ports()
 		# We have a conditional set of packages to include, lets do it
 		jq -r '."ports"."make.conf"."'$c'" | join("\n")' ${TRUEOS_MANIFEST} >>${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
 	done
+
+	# Set the BUILD_EPOCH_TIME for ports that ingest, such as freenas
+	echo "BUILD_EPOCH_TIME=${BUILD_EPOCH_TIME}" >>${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
 
 	# See if a particular version of the base sources is specified
 	#  and ensure the base ports are all pointing to the right branch of the OS repo
