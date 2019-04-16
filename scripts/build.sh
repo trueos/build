@@ -328,6 +328,7 @@ is_ports_dirty()
 		return 1
 	fi
 
+	PDIR="$(poudriere ports -l 2>/dev/null | grep -w ${POUDRIERE_PORTS} | cut -w -f5)"
 	CURBRANCH=$(cd ${PDIR} 2>/dev/null && git branch | awk '{print $2}')
 	if [ -z "$CURBRANCH" ] ; then
 		echo "Unable to detect branch, checking out ports fresh"
