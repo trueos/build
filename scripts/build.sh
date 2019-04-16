@@ -104,7 +104,7 @@ if [ -n "$CHECK" -a "$CHECK" != "null" ] ; then
 	POUDRIERE_PORTS="$CHECK"
 fi
 
-local platform="$(get_platform)"
+platform="$(get_platform)"
 
 
 # Set our important defaults
