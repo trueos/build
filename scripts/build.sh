@@ -349,6 +349,7 @@ is_ports_dirty()
 
 	# Looks like we are safe to try an in-place upgrade
 	echo "Updating previous poudriere ports tree"
+	poudriere ports -u -p ${POUDRIERE_PORTS}
 	if [ $? -ne 0 ] ; then
 		echo "Failed updating, checking out ports fresh"
 		echo -e "y\n" | poudriere ports -d -p ${POUDRIERE_PORTS}
