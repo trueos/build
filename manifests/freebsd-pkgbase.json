@@ -30,13 +30,9 @@
 			"default": []
 		},
 		"file-name": "FreeBSD-HEAD-pkgbase-x64-%%DATE%%",
-		"install-script": "",
+		"install-script": "/usr/sbin/bsdinstall",
 		"iso-packages": {
-			"default": [
-				"sysutils/beadm",
-				"sysutils/pc-installdialog",
-				"sysutils/pc-sysinstall"
-			]
+			"default": [ ]
 		},
 		"overlay": {
 		},
