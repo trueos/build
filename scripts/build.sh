@@ -592,7 +592,7 @@ setup_poudriere_jail()
 
 	# Nuke old packages if the ABI has changed
 	if [ -d "${POUDRIERE_PKGDIR}" -a "${POUDRIERE_PKGDIR}" != "/" ] ; then
-		if [ "$(cat {POUDRIERE_PKGDIR}/os.abi 2>/dev/null)" != "${NEWABI}" ] ; then
+		if [ "$(cat ${POUDRIERE_PKGDIR}/os.abi 2>/dev/null)" != "${NEWABI}" ] ; then
 			rm -r ${POUDRIERE_PKGDIR}/*
 		fi
 	fi
