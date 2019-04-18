@@ -563,11 +563,6 @@ setup_poudriere_jail()
 
 	echo "Rebuilding ${POUDRIERE_BASE} jail"
 
-	# Nuke packages if we need to rebuild jail
-	if [ -d "${POUDRIERE_PKGDIR}" ] ; then
-		rm -r ${POUDRIERE_PKGDIR}/*
-	fi
-
 	# Clean out old logs
 	rm ${POUDRIERE_LOGDIR}/base-ports/*
 
@@ -592,10 +587,25 @@ setup_poudriere_jail()
 		exit 1
 	fi
 
-	# Save the options used for this build
+	# Get ABI of the new jail
+	NEWABI=$(cat ${POUDRIERE_JAILDIR}/usr/include/sys/param.h | grep '#define __FreeBSD_version' | awk '{print $3}')
+
+	# Nuke old packages if the ABI has changed
+	if [ -d "${POUDRIERE_PKGDIR}" -a "${POUDRIERE_PKGDIR}" != "/" ] ; then
+		if [ "$(cat {POUDRIERE_PKGDIR}/os.abi 2>/dev/null)" != "${NEWABI}" ] ; then
+			rm -r ${POUDRIERE_PKGDIR}/*
+		fi
+	fi
+
+	# Make sure pkg directory exists
 	if [ ! -d "${POUDRIERE_PKGDIR}" ] ; then
 		mkdir -p ${POUDRIERE_PKGDIR}
 	fi
+
+	# Save the new ABI
+	echo "$NEWABI" > ${POUDRIERE_PKGDIR}/os.abi
+
+	# Save the options used for this build
 	get_kernel_flags | tr -d ' ' > ${POUDRIERE_PKGDIR}/buildkernel.options
 	get_world_flags | tr -d ' ' > ${POUDRIERE_PKGDIR}/buildworld.options
 	get_os_port_flags | tr -d ' ' > ${POUDRIERE_PKGDIR}/osport.options
