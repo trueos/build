@@ -93,7 +93,8 @@
 			"default": [
 				"PKG_ABISTRING=FreeBSD:12:amd64",
 				"os_userland_SET+=DOCS",
-				"os_userland_SET+=LIB32"
+				"os_userland_SET+=LIB32",
+				"security_ca_root_nss_SET+=ETCSYMLINK"
 			]
 		},
 		"type": "git",
