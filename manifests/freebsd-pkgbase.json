@@ -18,11 +18,8 @@
 			"default": [
 				"os/userland",
 				"os/kernel",
-				"security/sudo",
-				"sysutils/tmux",
-				"security/ca_root_nss",
-				"sysutils/sysup",
-				"textproc/jq"
+				"ports-mgmt/pkg",
+				"security/ca_root_nss"
 			]
 		},
 		"auto-install-script": "",
