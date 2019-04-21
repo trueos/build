@@ -54,8 +54,8 @@ pipeline {
     stage('Publish') {
       steps {
         sshagent (credentials: ['ef8c8aff-3b80-4a6a-9e0c-4d015bc5e945']) {
-          sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null trueos@cdn1.tn.ixsystems.com mkdir -p /cdn/pkg.trueos.org/pkg/freebsd12-pkgbase/FreeBSD:13:amd64/latest || true'
-          sh 'cd release/packages && rsync -av --delete-after --delay-updates -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" . trueos@cdn1.tn.ixsystems.com:/cdn/pkg.trueos.org/pkg/freebsd12-pkgbase/FreeBSD:13:amd64/latest/'
+          sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null trueos@cdn1.tn.ixsystems.com mkdir -p /cdn/pkg.trueos.org/pkg/freebsd12-pkgbase/FreeBSD:12:amd64/latest || true'
+          sh 'cd release/packages && rsync -av --delete-after --delay-updates -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" . trueos@cdn1.tn.ixsystems.com:/cdn/pkg.trueos.org/pkg/freebsd12-pkgbase/FreeBSD:12:amd64/latest/'
           sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null trueos@cdn1.tn.ixsystems.com mkdir -p /cdn/pkg.trueos.org/iso/freebsd12-pkgbase/ || true'
           sh 'rsync -av --delete-after --delay-updates -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" release/iso/ trueos@cdn1.tn.ixsystems.com:/cdn/pkg.trueos.org/iso/freebsd12-pkgbase/'
         }
