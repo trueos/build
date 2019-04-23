@@ -6,7 +6,7 @@ snapshot builds of freebsd/stable/12 branch.
 */
 
 pipeline {
-  agent { label 'TrueOS-Build-Unstable' }
+  agent { label 'TrueOS-Build-Pkgbase' }
 
   environment {
     GH_ORG = 'trueos'
