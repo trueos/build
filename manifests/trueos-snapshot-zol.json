@@ -112,7 +112,8 @@
         "MALLOC_PRODUCTION=YES",
 	"os_buildkernel_UNSET+=ZFS",
 	"os_buildworld_UNSET+=ZFS",
-	"os_userland_SET+=ZOL"
+	"os_userland_SET+=ZOL",
+	"security_ca_root_nss_UNSET+=ETCSYMLINK"
       ]
     },
     "src.conf": {
