@@ -17,6 +17,7 @@
 			"default": [
 				"os/userland",
 				"os/kernel",
+				"security/ca_root_nss",
 				"security/sudo",
 				"sysutils/tmux",
 				"security/ca_root_nss",
