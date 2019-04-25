@@ -113,7 +113,6 @@
 	"os_buildkernel_UNSET+=ZFS",
 	"os_buildworld_UNSET+=ZFS",
 	"os_userland_SET+=ZOL",
-	"security_ca_root_nss_UNSET+=ETCSYMLINK",
 	"sysutils_zol-kmod_SET+=DEBUG",
 	"sysutils_zol_SET+=DEBUG"
       ]
