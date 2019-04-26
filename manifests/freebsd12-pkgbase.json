@@ -91,7 +91,7 @@
 		"build-all": true,
 		"make.conf": {
 			"default": [
-				"BASEPKG_ABISTRING=FreeBSD:12:amd64",
+				"PKG_ABISTRING=FreeBSD:12:amd64",
 				"os_userland_SET+=DOCS",
 				"os_userland_SET+=LIB32"
 			]
