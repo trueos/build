@@ -99,6 +99,9 @@
 				"lang/python3",
 				"java/openjdk8",
 				"net/rsync",
+				"os/kernel-debug",
+				"os/kernel-debug-symbols",
+				"os/kernel-symbols",
 				"ports-mgmt/poudriere-trueos",
 				"textproc/jq",
 				"www/nginx"
