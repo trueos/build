@@ -23,6 +23,7 @@
         "sysutils/zol",
         "www/nginx",
         "security/ca_root_nss",
+        "security/gnupg",
         "sysutils/sysup",
 	"textproc/jq"
       ]

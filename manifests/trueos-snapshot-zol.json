@@ -104,6 +104,7 @@
         "lang/python3",
         "net/rsync",
         "ports-mgmt/poudriere-trueos",
+	"security/gnupg",
 	"shells/bash"
       ]
     },
