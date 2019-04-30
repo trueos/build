@@ -308,7 +308,7 @@ assemble_file_manifest(){
 		# Also inject the date/time of the current build here
 		local _date=`date -ju "+%Y_%m_%d %H:%M %Z"`
 		local _date_secs=`date -j +%s`
-		manifest="${manifest}, \"build_date\" : \"${_date}\", \"build_date_time_t\" : \"${_date_secs}\""
+		manifest="${manifest}, \"build_date\" : \"${_date}\", \"build_date_time_t\" : \"${_date_secs}\", \"version\" : \"${TRUEOS_VERSION}\""
 		echo "{ ${manifest} }" > "${mfile}"
 		return 0
 	else
