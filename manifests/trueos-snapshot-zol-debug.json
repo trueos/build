@@ -116,7 +116,9 @@
 	"os_buildworld_UNSET+=ZFS",
 	"os_userland_SET+=ZOL",
 	"sysutils_zol-kmod_SET+=DEBUG",
-	"sysutils_zol_SET+=DEBUG"
+	"sysutils_zol_SET+=DEBUG",
+	"security_ca_root_nss_UNSET+=ETCSYMLINK",
+        "security_ca_root_nss_SET+=LOCALSYMLINK"
       ]
     },
     "src.conf": {

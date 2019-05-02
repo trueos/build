@@ -112,7 +112,9 @@
 		"make.conf": {
 			"default": [
 				"java_openjdk8_UNSET+=ALSA",
-				"java_openjdk8_UNSET+=X11"
+				"java_openjdk8_UNSET+=X11",
+				"security_ca_root_nss_UNSET+=ETCSYMLINK",
+				"security_ca_root_nss_SET+=LOCALSYMLINK"
 			]
 		},
 		"type": "git",
