@@ -1053,13 +1053,14 @@ EOF
 	chroot ${ISODIR} cap_mkdb /etc/login.conf
 	touch ${ISODIR}/etc/fstab
 
-	cp iso-files/rc.install ${ISODIR}/etc/
 	cp ${TRUEOS_MANIFEST} ${ISODIR}/root/trueos-manifest.json
 	cp ${TRUEOS_MANIFEST} ${ISODIR}/var/db/trueos-manifest.json
 
 	# If we are using OpenRC, prep the ISO image
 	if [ -e "${ISODIR}/sbin/openrc" ] ; then
+		echo "Using OpenRC boot method for ISO"
 		cp iso-files/openrc ${ISODIR}/etc/rc
+		cp iso-files/rc.install ${ISODIR}/etc/
 
 		# Cleanup default runlevels
 		rm ${ISODIR}/etc/runlevels/boot/*
@@ -1072,6 +1073,9 @@ EOF
 		do
 			ln -fs /etc/init.d/${i} ${ISODIR}/etc/runlevels/default/${i}
 		done
+	else
+		echo "Using rc.d boot method for ISO"
+		cp iso-files/rc.install ${ISODIR}/etc/rc.local
 	fi
 
 	# Check for conditionals packages to install
