@@ -1053,22 +1053,26 @@ EOF
 	chroot ${ISODIR} cap_mkdb /etc/login.conf
 	touch ${ISODIR}/etc/fstab
 
-	cp iso-files/rc ${ISODIR}/etc/
 	cp iso-files/rc.install ${ISODIR}/etc/
 	cp ${TRUEOS_MANIFEST} ${ISODIR}/root/trueos-manifest.json
 	cp ${TRUEOS_MANIFEST} ${ISODIR}/var/db/trueos-manifest.json
 
-	# Cleanup default runlevels
-	rm ${ISODIR}/etc/runlevels/boot/*
-	rm ${ISODIR}/etc/runlevels/default/*
-	for i in abi ldconfig localmount
-	do
-		ln -fs /etc/init.d/${i} ${ISODIR}/etc/runlevels/boot/${i}
-	done
-	for i in local
-	do
-		ln -fs /etc/init.d/${i} ${ISODIR}/etc/runlevels/default/${i}
-	done
+	# If we are using OpenRC, prep the ISO image
+	if [ -e "${ISODIR}/sbin/openrc" ] ; then
+		cp iso-files/openrc ${ISODIR}/etc/rc
+
+		# Cleanup default runlevels
+		rm ${ISODIR}/etc/runlevels/boot/*
+		rm ${ISODIR}/etc/runlevels/default/*
+		for i in abi ldconfig localmount
+		do
+			ln -fs /etc/init.d/${i} ${ISODIR}/etc/runlevels/boot/${i}
+		done
+		for i in local
+		do
+			ln -fs /etc/init.d/${i} ${ISODIR}/etc/runlevels/default/${i}
+		done
+	fi
 
 	# Check for conditionals packages to install
 	for c in $(jq -r '."iso"."iso-packages" | keys[]' ${TRUEOS_MANIFEST} 2>/dev/null | tr -s '\n' ' ')
