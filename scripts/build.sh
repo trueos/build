@@ -389,6 +389,17 @@ setup_poudriere_ports()
 		if [ $? -ne 0 ] ; then
 			exit_err "Failed copying manifest into ports -> ${POUDRIERE_PORTDIR}/local_source"
 		fi
+
+		# Copy manifest for buildworld port
+		if [ -d "${POUDRIERE_PORTDIR}/os/buildworld" ] ; then
+			if [ ! -d "${POUDRIERE_PORTDIR}/os/buildworld/files" ] ; then
+				mkdir -p ${POUDRIERE_PORTDIR}/os/buildworld/files
+			fi
+			cp ${TRUEOS_MANIFEST} ${POUDRIERE_PORTDIR}/os/buildworld/files/trueos-manifest.json
+			if [ $? -ne 0 ] ; then
+				exit_err "Failed copying manifest into ports -> ${POUDRIERE_PORTDIR}/os/buildworld/files/"
+			fi
+		fi
 	fi
 
 	# Add any list of files to strip from port plists
