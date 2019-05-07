@@ -15,8 +15,8 @@
 	"iso": {
 		"auto-install-packages": {
 			"default": [
-				"os/userland",
-				"os/kernel",
+				"os/userland@generic",
+				"os/kernel@generic",
 				"security/ca_root_nss",
 				"security/sudo",
 				"sysutils/ipmitool",
@@ -100,9 +100,11 @@
 				"lang/python3",
 				"java/openjdk8",
 				"net/rsync",
-				"os/kernel-debug",
-				"os/kernel-debug-symbols",
-				"os/kernel-symbols",
+				"os/userland@all",
+				"os/kernel@all",
+				"os/kernel-debug@all",
+				"os/kernel-debug-symbols@all",
+				"os/kernel-symbols@all",
 				"ports-mgmt/poudriere-trueos",
 				"textproc/jq",
 				"www/nginx"
