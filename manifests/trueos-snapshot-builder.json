@@ -101,6 +101,7 @@
 				"java/openjdk8",
 				"net/rsync",
 				"os/userland@all",
+				"os/userland-base@all",
 				"os/kernel@all",
 				"os/kernel-debug@all",
 				"os/kernel-debug-symbols@all",
