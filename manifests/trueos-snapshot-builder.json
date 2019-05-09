@@ -15,14 +15,11 @@
 	"iso": {
 		"auto-install-packages": {
 			"default": [
-				"os/userland@generic",
-				"os/kernel@generic",
 				"security/ca_root_nss",
 				"security/sudo",
 				"sysutils/ipmitool",
 				"sysutils/dmidecode",
 				"sysutils/tmux",
-				"security/ca_root_nss",
 				"security/gnupg",
 				"sysutils/sysup",
 				"textproc/jq"
