@@ -37,6 +37,17 @@
 				"sysutils/pc-sysinstall"
 			]
 		},
+		"os-flavors": {
+			"generic": {
+				"description":"Default TrueOS world / kernel"
+			},
+			"minimal":{
+				"description":"Minimal world with less optional features."
+			},
+			"zol":{
+				"description":"TrueOS using ZFS on Linux for base file-system."
+			}
+		},
 		"overlay": {
 		},
 		"prune": {
