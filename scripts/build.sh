@@ -696,7 +696,6 @@ build_poudriere()
 	fi
 	# Assemble the package manifests as needed
 	if [ $(jq -r '."ports"."generate-manifests"' ${TRUEOS_MANIFEST}) = "true" ] ; then
-		echo "Generating Package Manifests"
 		#Cleanup the output directory first
 		local mandir="release/pkg-manifests"
 		if [ -d "${mandir}" ] ; then
@@ -704,14 +703,14 @@ build_poudriere()
 		else
 			mkdir -p "${mandir}"
 		fi
+		echo "Generating Package Manifests in ${pwd}/${mandir}"
 		# Copy over the relevant files from the ports tree
-		cp "$(find ${POUDRIERE_PORTDIR} -maxdepth 3 -name MOVED)" ${mandir}/.
-		cp "$(find ${POUDRIERE_PORTDIR} -maxdepth 3 -name UPDATING)" ${mandir}/.
-		cp "$(find ${POUDRIERE_PORTDIR} -maxdepth 3 -name CHANGES)" ${mandir}/.
+		cp "$(find ${POUDRIERE_PORTDIR} -maxdepth 3 -name MOVED)" ${mandir}/MOVED
+		cp "$(find ${POUDRIERE_PORTDIR} -maxdepth 3 -name UPDATING)" ${mandir}/UPDATING
+		cp "$(find ${POUDRIERE_PORTDIR} -maxdepth 3 -name CHANGES)" ${mandir}/CHANGES
 		# Assemble a quick list of all the ports/packages that are available in the repo
 		mk_repo_config
 		pkg-static -R tmp/repo-config rquery -a "%o : %n : %v" > "${mandir}/pkg.list"
-
 	fi
 	return 0
 }

@@ -49,7 +49,7 @@ $comment
   echo "" >> Makefile.tmp
   echo ".include <bsd.port.subdir.mk>" >> Makefile.tmp
   mv Makefile.tmp Makefile
-
+  #always return to the original directory
   cd "${origdir}"
 }
 
@@ -71,15 +71,17 @@ validate_port_makefile(){
     echo "SUBDIR += $d" >> Makefile.tmp
   done
   #Verify there is actually something to do
-  if [ ! -e "Makefile.tmp" ] ; then return 0 ; fi
-  #Now strip out the subdir info from the original Makefile
-  cp Makefile Makefile.skel
-  sed -i '' "s|SUBDIR += lang|%%TMP%%|g" Makefile.skel
-  echo "SUBDIR += lang" >> Makefile.tmp #make sure we don't remove this cat
-  #Insert the new subdir list into the skeleton file and replace the original
-  awk '/%%TMP%%/{system("cat Makefile.tmp");next}1' Makefile.skel > Makefile
-  #Now cleanup the temporary files
-  rm Makefile.tmp Makefile.skel
+  if [ -e "Makefile.tmp" ] ; then
+    #Now strip out the subdir info from the original Makefile
+    cp Makefile Makefile.skel
+    sed -i '' "s|SUBDIR += lang|%%TMP%%|g" Makefile.skel
+    echo "SUBDIR += lang" >> Makefile.tmp #make sure we don't remove this cat
+    #Insert the new subdir list into the skeleton file and replace the original
+    awk '/%%TMP%%/{system("cat Makefile.tmp");next}1' Makefile.skel > Makefile
+    #Now cleanup the temporary files
+    rm Makefile.tmp Makefile.skel
+  fi
+  #Always return to the original directory
   cd "${origdir}"
 }
 
