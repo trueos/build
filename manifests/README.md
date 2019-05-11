@@ -89,6 +89,8 @@ The "iso" target within the manifest controls all the options specific to creati
 * **optional-dist-packages** (JSON object) : Lists of packages (by port origin) to have available in .txz form on the ISO. These ones are considered "optional" and may or may not be included depending on whether the package built successfully.
    * **default** (JSON array of strings) : Default list (required)
    * **ENV_VARIABLE** (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name exists.
+* **os-flavors** (JSON object)
+   * **FLAVOR_NAME** (JSON Object) Name of flavor to allow installation of, description string should be included
 * **pool** (JSON object) : Settings for boot pool
  * **name** (string) : Default name of ZFS boot pool
 * **prune-dist-packages** (JSON object) : Lists of *regular expressions* to use to find and remove dist packages. This is useful for forcibly removing particular types of base packages.
@@ -131,6 +133,17 @@ The "iso" target within the manifest controls all the options specific to creati
         "command": "rm /root/inside-chroot"
       }
   ],
+  "os-flavors": {
+     "generic": {
+        "description":"Default TrueOS world / kernel"
+     },
+     "minimal":{
+        "description":"Minimal world with less optional features."
+     },
+     "zol":{
+        "description":"TrueOS using ZFS on Linux for base file-system."
+     }
+  },
   "prune": {
     "ENV_VARIABLE": [
       "/usr/share/examples",
