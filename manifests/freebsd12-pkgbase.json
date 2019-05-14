@@ -85,7 +85,8 @@
 		"build": {
 			"default": [
 				"devel/git",
-				"editors/vim-console"
+				"editors/vim-console",
+				"sysutils/zol"
 			]
 		},
 		"build-all": true,
