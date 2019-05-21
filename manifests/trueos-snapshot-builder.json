@@ -115,6 +115,7 @@
 				"os/kernel-debug-symbols@all",
 				"os/kernel-symbols@all",
 				"ports-mgmt/poudriere-trueos",
+				"shells/zsh",
 				"textproc/jq",
 				"www/nginx"
 			]
