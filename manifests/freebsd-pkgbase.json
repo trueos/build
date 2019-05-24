@@ -11,7 +11,8 @@
 				"KERNCONF=GENERIC-NODEBUG"
 			]
 		},
-		"trueos-branch":"freebsd/master"
+		"branch":"freebsd/master",
+		"repo":"https://github.com/trueos/trueos"
 	},
 	"iso": {
 		"auto-install-packages": {

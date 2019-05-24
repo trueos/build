@@ -422,16 +422,6 @@ setup_poudriere_ports()
 
 	# Set the BUILD_EPOCH_TIME for ports that ingest, such as freenas
 	echo "BUILD_EPOCH_TIME=${BUILD_EPOCH_TIME}" >>${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
-
-	# See if a particular version of the base sources is specified
-	#  and ensure the base ports are all pointing to the right branch of the OS repo
-	if [ -e "${POUDRIERE_PORTDIR}/update-branch-os.sh" ] ; then
-		local os_branch=$(jq -r '."base-packages"."trueos-branch"' ${TRUEOS_MANIFEST})
-		if [ -n "${os_branch}" ] && [ "${os_branch}" != "null" ] ; then
-			echo "Adjusting TrueOS version branch: ${os_branch}"
-			(cd "${POUDRIERE_PORTDIR}" && ./update-branch-os.sh "os" "${os_branch}")
-		fi
-	fi
 }
 
 create_poudriere_ports()
@@ -574,6 +564,21 @@ setup_poudriere_jail()
 
 	echo "Rebuilding ${POUDRIERE_BASE} jail"
 
+	# Checkout sources
+	GITREPO=$(jq -r '."base-packages"."repo"' ${TRUEOS_MANIFEST} 2>/dev/null)
+	GITBRANCH=$(jq -r '."base-packages"."branch"' ${TRUEOS_MANIFEST} 2>/dev/null)
+	if [ -z "${GITREPO}" -o -z "${GITBRANCH}" ] ; then
+		exit_err "Missing base-packages repo/branch"
+	fi
+
+	rm -rf tmp/os
+	git clone --depth=1 -b ${GITBRANCH} ${GITREPO} tmp/os
+	if [ $? -ne 0 ] ; then
+		exit_err "Failed checking out OS sources"
+	fi
+	echo "BASEPKG_SRCDIR=$(pwd)/tmp/os" > ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
+
+
 	# Clean out old logs
 	rm ${POUDRIERE_LOGDIR}/base-ports/*
 
@@ -615,6 +620,10 @@ setup_poudriere_jail()
 
 	# Save the new ABI
 	echo "$NEWABI" > ${POUDRIERE_PKGDIR}/os.abi
+
+	# Remove the previously set BASEPKG_SRCDIR for normal building
+	cat ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf | grep -v "BASEPKG_SRCDIR=" > tmp/.make.conf
+	mv tmp/.make.conf ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
 
 	# Save the options used for this build
 	get_kernel_flags | tr -d ' ' > ${POUDRIERE_PKGDIR}/buildkernel.options

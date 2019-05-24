@@ -11,7 +11,8 @@
 				"KERNCONF=GENERIC"
 			]
 		},
-		"trueos-branch":"freebsd/stable/12"
+		"branch":"freebsd/stable/12",
+		"repo":"https://github.com/trueos/trueos"
 	},
 	"iso": {
 		"auto-install-packages": {
