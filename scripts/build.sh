@@ -513,6 +513,13 @@ checkout_os_sources()
 	if [ $? -ne 0 ] ; then
 		exit_err "Failed checking out OS sources"
 	fi
+
+	if [ ! -e "tmp/os/sys/conf/package-version" ] ; then
+		# Get the date of these git sources for hard-coding OS version / timestamp
+		OSDATE=$(git -C tmp/os log -1 --date=format:'%Y%m%d%H%M%S' | grep "Date:" | awk '{print $2}')
+		echo "${OSDATE}" > tmp/os/sys/conf/package-version
+	fi
+
 	export BASEPKG_SRCDIR=$(pwd)/tmp/os
 }
 
