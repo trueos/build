@@ -607,6 +607,9 @@ setup_poudriere_jail()
 	echo "----------------------------"
 	cat ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
 
+	# Set alternative source location
+	sed -i '' "s|/usr/src|${BASEPKG_SRCDIR}|g" ${POUDRIERE_PORTDIR}/os/Makefile.common
+
 	export KERNEL_MAKE_FLAGS="$(get_kernel_flags)"
 	export WORLD_MAKE_FLAGS="$(get_world_flags)"
 	architecture="$(get_architecture)"
@@ -618,6 +621,7 @@ setup_poudriere_jail()
 	if [ $? -ne 0 ] ; then
 		exit 1
 	fi
+	sed -i '' "s|${BASEPKG_SRCDIR}|/usr/src|g" ${POUDRIERE_PORTDIR}/os/Makefile.common
 
 	# Get ABI of the new jail
 	NEWABI=$(cat ${POUDRIERE_JAILDIR}/usr/include/sys/param.h | grep '#define __FreeBSD_version' | awk '{print $3}')
