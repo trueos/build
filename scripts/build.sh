@@ -608,6 +608,7 @@ setup_poudriere_jail()
 	echo "Using source make.conf"
 	echo "----------------------------"
 	cat ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
+	export __MAKE_CONF=${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
 
 	export KERNEL_MAKE_FLAGS="$(get_kernel_flags)"
 	export WORLD_MAKE_FLAGS="$(get_world_flags)"
@@ -620,6 +621,7 @@ setup_poudriere_jail()
 	if [ $? -ne 0 ] ; then
 		exit 1
 	fi
+	unset __MAKE_CONF
 
 	# Get ABI of the new jail
 	NEWABI=$(cat ${POUDRIERE_JAILDIR}/usr/include/sys/param.h | grep '#define __FreeBSD_version' | awk '{print $3}')
