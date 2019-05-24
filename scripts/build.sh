@@ -495,6 +495,24 @@ create_poudriere_ports()
 	fi
 }
 
+checkout_os_sources()
+{
+
+	# Checkout sources
+	GITREPO=$(jq -r '."base-packages"."repo"' ${TRUEOS_MANIFEST} 2>/dev/null)
+	GITBRANCH=$(jq -r '."base-packages"."branch"' ${TRUEOS_MANIFEST} 2>/dev/null)
+	if [ -z "${GITREPO}" -o -z "${GITBRANCH}" ] ; then
+		exit_err "Missing base-packages repo/branch"
+	fi
+
+	rm -rf tmp/os
+	git clone --depth=1 -b ${GITBRANCH} ${GITREPO} tmp/os
+	if [ $? -ne 0 ] ; then
+		exit_err "Failed checking out OS sources"
+	fi
+	echo "BASEPKG_SRCDIR=$(pwd)/tmp/os" > ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
+}
+
 is_jail_dirty()
 {
 	poudriere jail -l | grep -q -w "${POUDRIERE_BASE}"
@@ -503,6 +521,8 @@ is_jail_dirty()
 	fi
 
 	echo "Checking existing jail"
+
+	checkout_os_sources
 
 	# Check if we need to build the jail - skip if existing pkg is updated
 	pkgName=$(make -C ${POUDRIERE_PORTDIR}/os/src -V PKGNAME PORTSDIR=${POUDRIERE_PORTDIR} __MAKE_CONF=${OBJDIR}/poudriere.d/${POUDRIERE_BASE}-make.conf)
@@ -547,12 +567,20 @@ is_jail_dirty()
 	return 0
 }
 
+remove_basepkg_srcdir()
+{
+	# Remove the previously set BASEPKG_SRCDIR for normal building
+	cat ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf | grep -v "BASEPKG_SRCDIR=" > tmp/.make.conf
+	mv tmp/.make.conf ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
+}
+
 # Checks if we have a new base ports jail to build, if so we will rebuild it
 setup_poudriere_jail()
 {
 	is_jail_dirty
 	if [ $? -eq 0 ] ; then
 		# Jail is updated, we can skip build
+		remove_basepkg_srcdir
 		return 0
 	fi
 
@@ -563,21 +591,6 @@ setup_poudriere_jail()
 	fi
 
 	echo "Rebuilding ${POUDRIERE_BASE} jail"
-
-	# Checkout sources
-	GITREPO=$(jq -r '."base-packages"."repo"' ${TRUEOS_MANIFEST} 2>/dev/null)
-	GITBRANCH=$(jq -r '."base-packages"."branch"' ${TRUEOS_MANIFEST} 2>/dev/null)
-	if [ -z "${GITREPO}" -o -z "${GITBRANCH}" ] ; then
-		exit_err "Missing base-packages repo/branch"
-	fi
-
-	rm -rf tmp/os
-	git clone --depth=1 -b ${GITBRANCH} ${GITREPO} tmp/os
-	if [ $? -ne 0 ] ; then
-		exit_err "Failed checking out OS sources"
-	fi
-	echo "BASEPKG_SRCDIR=$(pwd)/tmp/os" > ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
-
 
 	# Clean out old logs
 	rm ${POUDRIERE_LOGDIR}/base-ports/*
@@ -613,6 +626,8 @@ setup_poudriere_jail()
 		fi
 	fi
 
+	remove_basepkg_srcdir
+
 	# Make sure pkg directory exists
 	if [ ! -d "${POUDRIERE_PKGDIR}" ] ; then
 		mkdir -p ${POUDRIERE_PKGDIR}
@@ -620,10 +635,6 @@ setup_poudriere_jail()
 
 	# Save the new ABI
 	echo "$NEWABI" > ${POUDRIERE_PKGDIR}/os.abi
-
-	# Remove the previously set BASEPKG_SRCDIR for normal building
-	cat ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf | grep -v "BASEPKG_SRCDIR=" > tmp/.make.conf
-	mv tmp/.make.conf ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
 
 	# Save the options used for this build
 	get_kernel_flags | tr -d ' ' > ${POUDRIERE_PKGDIR}/buildkernel.options
