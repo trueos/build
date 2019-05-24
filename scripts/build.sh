@@ -513,7 +513,7 @@ checkout_os_sources()
 	if [ $? -ne 0 ] ; then
 		exit_err "Failed checking out OS sources"
 	fi
-	echo "BASEPKG_SRCDIR=$(pwd)/tmp/os" >> ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
+	export BASEPKG_SRCDIR=$(pwd)/tmp/os
 }
 
 is_jail_dirty()
@@ -570,9 +570,7 @@ is_jail_dirty()
 
 remove_basepkg_srcdir()
 {
-	# Remove the previously set BASEPKG_SRCDIR for normal building
-	cat ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf | grep -v "BASEPKG_SRCDIR=" > tmp/.make.conf
-	mv tmp/.make.conf ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
+	unset BASEPKG_SRCDIR
 }
 
 # Checks if we have a new base ports jail to build, if so we will rebuild it
@@ -608,7 +606,6 @@ setup_poudriere_jail()
 	echo "Using source make.conf"
 	echo "----------------------------"
 	cat ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
-	export __MAKE_CONF=${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
 
 	export KERNEL_MAKE_FLAGS="$(get_kernel_flags)"
 	export WORLD_MAKE_FLAGS="$(get_world_flags)"
@@ -621,7 +618,6 @@ setup_poudriere_jail()
 	if [ $? -ne 0 ] ; then
 		exit 1
 	fi
-	unset __MAKE_CONF
 
 	# Get ABI of the new jail
 	NEWABI=$(cat ${POUDRIERE_JAILDIR}/usr/include/sys/param.h | grep '#define __FreeBSD_version' | awk '{print $3}')
