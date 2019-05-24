@@ -510,7 +510,7 @@ checkout_os_sources()
 	if [ $? -ne 0 ] ; then
 		exit_err "Failed checking out OS sources"
 	fi
-	echo "BASEPKG_SRCDIR=$(pwd)/tmp/os" > ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
+	echo "BASEPKG_SRCDIR=$(pwd)/tmp/os" >> ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
 }
 
 is_jail_dirty()
@@ -603,6 +603,10 @@ setup_poudriere_jail()
 	if [ -d "/var/db/ports/os_buildkernel" ] ; then
 		rm -rf /var/db/ports/os_buildkernel
 	fi
+
+	echo "Using source make.conf"
+	echo "----------------------------"
+	cat ${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
 
 	export KERNEL_MAKE_FLAGS="$(get_kernel_flags)"
 	export WORLD_MAKE_FLAGS="$(get_world_flags)"
