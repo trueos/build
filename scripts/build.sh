@@ -422,6 +422,9 @@ setup_poudriere_ports()
 
 	# Set the BUILD_EPOCH_TIME for ports that ingest, such as freenas
 	echo "BUILD_EPOCH_TIME=${BUILD_EPOCH_TIME}" >>${POUDRIERED_DIR}/${POUDRIERE_BASE}-make.conf
+
+	# Setup the OS sources for build
+	checkout_os_sources
 }
 
 create_poudriere_ports()
@@ -521,8 +524,6 @@ is_jail_dirty()
 	fi
 
 	echo "Checking existing jail"
-
-	checkout_os_sources
 
 	# Check if we need to build the jail - skip if existing pkg is updated
 	pkgName=$(make -C ${POUDRIERE_PORTDIR}/os/src -V PKGNAME PORTSDIR=${POUDRIERE_PORTDIR} __MAKE_CONF=${OBJDIR}/poudriere.d/${POUDRIERE_BASE}-make.conf)
