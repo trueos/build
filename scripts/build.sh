@@ -586,7 +586,6 @@ setup_poudriere_jail()
 	is_jail_dirty
 	if [ $? -eq 0 ] ; then
 		# Jail is updated, we can skip build
-		remove_basepkg_srcdir
 		return 0
 	fi
 
@@ -639,8 +638,6 @@ setup_poudriere_jail()
 			rm -r ${POUDRIERE_PKGDIR}/*
 		fi
 	fi
-
-	remove_basepkg_srcdir
 
 	# Make sure pkg directory exists
 	if [ ! -d "${POUDRIERE_PKGDIR}" ] ; then
