@@ -1413,25 +1413,11 @@ create_vm_dir()
 
 	mk_repo_config
 
-	BASE_PACKAGES="os/userland os/kernel ports-mgmt/pkg textproc/jq"
-
 	mkdir -p ${VMDIR}/tmp
 	mkdir -p ${VMDIR}/var/db/pkg
 	cp -r tmp/repo-config ${VMDIR}/tmp/repo-config
 
 	export PKG_DBDIR="tmp/pkgdb"
-
-	# Install the base packages into vm dir
-	for pkg in ${BASE_PACKAGES}
-	do
-		pkg-static -r ${VMDIR} -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh \
-			-R tmp/repo-config \
-			install -y ${pkg}
-		if [ $? -ne 0 ] ; then
-			exit_err "Failed installing base packages to VM directory..."
-		fi
-
-	done
 
 	# Install the packages from JSON manifest
 	# - get whether to use the "iso" or "vm" parent object
