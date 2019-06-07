@@ -112,7 +112,8 @@ NAME="$1"; shift
 publisher="TrueOS -  https://www.TrueOS.org/"
 echo "/dev/iso9660/$LABEL / cd9660 ro 0 0" > "$BASEBITSDIR/etc/fstab"
 sync
-$MAKEFS -t cd9660 $bootable -o rockridge -o label="$LABEL" -o publisher="$publisher" "$NAME" "$@" $OVERLAY_DIR
+tar cf - -C$OVERLAY_DIR . | tar xf - -C$BASEBITSDIR
+$MAKEFS -t cd9660 $bootable -o rockridge -o label="$LABEL" -o publisher="$publisher" "$NAME" "$@"
 rm -f ${espfilename}
 
 if [ "$bootable" != "" ]; then
