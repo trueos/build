@@ -87,7 +87,7 @@
 			"default": [
 				"devel/git",
 				"editors/vim-console",
-				"sysutils/zol"
+				"sysutils/openzfs"
 			]
 		},
 		"build-all": true,
