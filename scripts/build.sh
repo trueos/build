@@ -1088,6 +1088,10 @@ EOF
 	if [ $? -ne 0 ] ; then
 		exit_err "Failed mounting nullfs to ${ISODIR}/install-pkg"
 	fi
+	mount -t devfs devfs ${ISODIR}/dev
+	if [ $? -ne 0 ] ; then
+		exit_err "Failed mounting devfs to ${ISODIR}/dev"
+	fi
 
 	# Prep the new ISO environment
 	chroot ${ISODIR} pwd_mkdb /etc/master.passwd
@@ -1138,6 +1142,7 @@ EOF
 	done
 
 	# Cleanup the ISO install packages
+	umount -f ${ISODIR}/dev
 	umount -f ${ISODIR}/install-pkg
 	rmdir ${ISODIR}/install-pkg
 	rm ${ISODIR}/etc/pkg/*
