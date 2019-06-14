@@ -1515,6 +1515,12 @@ run_vm_post_install() {
 			echo "Stamping ZFS boot-loader"
 			echo "gpart bootcode -b ${VMDIR}/boot/pmbr -p ${VMDIR}/boot/gptzfsboot -i 1 ${MDDEV}"
 			gpart bootcode -b ${VMDIR}/boot/pmbr -p ${VMDIR}/boot/gptzfsboot -i 1 ${MDDEV} || exit_err "failed stamping boot!"
+			touch ${VMDIR}/boot/loader.conf
+			if [ -e "${VMDIR}/boot/modules/openzfs.ko" ] ; then
+				sysrc -f ${VMDIR}/boot/loader.conf openzfs_load=YES
+			else
+				sysrc -f ${VMDIR}/boot/loader.conf zfs_load=YES
+			fi
 			;;
 	esac
 
