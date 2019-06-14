@@ -130,10 +130,16 @@
 	],
 	"version": "1.1",
 	"vm": {
+		"boot":"zfs",
+		"disk-config":"zfs-noswap",
+		"file-name": "TrueOS-Snapshot-EC2-x64-%%GITHASH%%-%%DATE%%",
 		"size":"3G",
 		"type":"ec2",
-		"file-name": "TrueOS-Snapshot-EC2-x64-%%GITHASH%%-%%DATE%%",
-		"disk-config":"zfs-noswap",
-		"boot":"zfs"
+		"vm-base-packages": {
+			"default": [
+				"os-generic-userland",
+				"os-generic-kernel"
+			]
+		}
 	}
 }

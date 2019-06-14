@@ -33,10 +33,17 @@
 		},
 		"file-name": "TrueOS-Snapshot-Builder-x64-%%GITHASH%%-%%DATE%%",
 		"install-script": "",
+		"iso-base-packages": {
+			"default": [
+				"os-generic-userland",
+				"os-generic-kernel"
+			]
+		},
 		"iso-packages": {
 			"default": [
 				"sysutils/pc-installdialog",
-				"sysutils/pc-sysinstall"
+				"sysutils/pc-sysinstall",
+				"textproc/jq"
 			]
 		},
 		"os-flavors": {
@@ -46,8 +53,8 @@
 			"minimal":{
 				"description":"Minimal world with less optional features."
 			},
-			"zol":{
-				"description":"TrueOS using ZFS on Linux for base file-system."
+			"nozfs":{
+				"description":"TrueOS using ports OpenZFS for base file-system."
 			}
 		},
 		"overlay": {

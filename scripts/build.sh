@@ -681,11 +681,6 @@ get_pkg_build_list()
 		done
 	done
 
-	# Get the explicit packages
-	echo 'os/userland' >> ${1}
-	echo 'os/kernel' >> ${1}
-	echo 'textproc/jq' >> ${1}
-
 	# Sort and remove dups
 	cat ${1} | sort -r | uniq > ${1}.new
 	mv ${1}.new ${1}
@@ -944,7 +939,26 @@ create_iso_dir()
 
 	export PKG_DBDIR="tmp/pkgdb"
 
-	BASE_PACKAGES="os/userland os/kernel ports-mgmt/pkg textproc/jq"
+	# Check for conditionals packages to install
+	for c in $(jq -r '."iso"."iso-base-packages" | keys[]' ${TRUEOS_MANIFEST} 2>/dev/null | tr -s '\n' ' ')
+	do
+		eval "CHECK=\$$c"
+		if [ -z "$CHECK" -a "$c" != "default" ] ; then continue; fi
+
+		# We have a conditional set of packages to include, lets do it
+		for i in $(jq -r '."iso"."iso-base-packages"."'$c'" | join(" ")' ${TRUEOS_MANIFEST})
+		do
+			BASE_PACKAGES="${BASE_PACKAGES} ${i}"
+		done
+	done
+
+	if [ -z "$BASE_PACKAGES" ] ; then
+		# No custom base packages specified, lets roll with the defaults
+		BASE_PACKAGES="os/userland os/kernel ports-mgmt/pkg"
+	else
+		# We always need pkg itself
+		BASE_PACKAGES="${BASE_PACKAGES} ports-mgmt/pkg"
+	fi
 
 	# Install the base packages into iso dir
 	for pkg in ${BASE_PACKAGES}
@@ -1418,7 +1432,26 @@ create_vm_dir()
 
 	mk_repo_config
 
-	BASE_PACKAGES="os/userland os/kernel ports-mgmt/pkg textproc/jq"
+	# Check for conditionals packages to install
+	for c in $(jq -r '."vm"."vm-base-packages" | keys[]' ${TRUEOS_MANIFEST} 2>/dev/null | tr -s '\n' ' ')
+	do
+		eval "CHECK=\$$c"
+		if [ -z "$CHECK" -a "$c" != "default" ] ; then continue; fi
+
+		# We have a conditional set of packages to include, lets do it
+		for i in $(jq -r '."iso"."vm-base-packages"."'$c'" | join(" ")' ${TRUEOS_MANIFEST})
+		do
+			BASE_PACKAGES="${BASE_PACKAGES} ${i}"
+		done
+	done
+
+	if [ -z "$BASE_PACKAGES" ] ; then
+		# No custom base packages specified, lets roll with the defaults
+		BASE_PACKAGES="os/userland os/kernel ports-mgmt/pkg"
+	else
+		# We always need pkg itself
+		BASE_PACKAGES="${BASE_PACKAGES} ports-mgmt/pkg"
+	fi
 
 	mkdir -p ${VMDIR}/tmp
 	mkdir -p ${VMDIR}/var/db/pkg
