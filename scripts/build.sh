@@ -1178,6 +1178,10 @@ EOF
 
 prune_iso()
 {
+	# Nuke /rescue on image, its huge
+	rm ${ISODIR}/rescue/*
+	rmdir ${ISODIR}/rescue
+
 	# User-specified pruning
 	# Check if we have paths to prune from the ISO before build
 	for c in $(jq -r '."iso"."prune" | keys[]' ${TRUEOS_MANIFEST} 2>/dev/null | tr -s '\n' ' ')
