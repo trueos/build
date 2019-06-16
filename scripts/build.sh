@@ -1098,6 +1098,7 @@ install-repo: {
 }
 EOF
 	mkdir -p ${ISODIR}/install-pkg
+	mkdir -p ${ISODIR}/usr/home
 	mount_nullfs ${POUDRIERE_PKGDIR} ${ISODIR}/install-pkg
 	if [ $? -ne 0 ] ; then
 		exit_err "Failed mounting nullfs to ${ISODIR}/install-pkg"
