@@ -38,6 +38,7 @@ fi
 /sbin/mount -t tmpfs tmpfs /var/
 /sbin/mount -t tmpfs tmpfs /etc/
 /sbin/mount -t tmpfs tmpfs /usr/local/etc/
+/sbin/mount -t tmpfs tmpfs /usr/home/
 #Move staged files into read/write mountpoints
 /bin/mv /tmp/var/* /var/
 /bin/mv /tmp/etc/* /etc/
