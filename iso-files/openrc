@@ -31,9 +31,9 @@ fi
 /bin/mkdir -p /tmp/etc
 /bin/mkdir -p /tmp/localetc
 #Copy any existing files to the staging area
-/bin/cp -r /var/* /tmp/var/
-/bin/cp -r /etc/* /tmp/etc/
-/bin/cp -r /usr/local/etc/* /tmp/localetc/
+/bin/cp -rp /var/* /tmp/var/
+/bin/cp -rp /etc/* /tmp/etc/
+/bin/cp -rp /usr/local/etc/* /tmp/localetc/
 #Create the read-write tmpfs mountpoints
 /sbin/mount -t tmpfs tmpfs /var/
 /sbin/mount -t tmpfs tmpfs /etc/
