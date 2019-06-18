@@ -31,6 +31,14 @@
 		"dist-packages": {
 			"default": []
 		},
+		"dist-packages-glob": {
+			"default": [
+				"os-minimal-kernel",
+				"os-minimal-userland",
+				"os-nozfs-kernel",
+				"os-nozfs-userland"
+			]
+		},
 		"file-name": "TrueOS-Snapshot-Builder-x64-%%GITHASH%%-%%DATE%%",
 		"install-script": "",
 		"iso-base-packages": {

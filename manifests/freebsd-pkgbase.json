@@ -27,6 +27,14 @@
 		"dist-packages": {
 			"default": []
 		},
+		"dist-packages-glob": {
+			"default": [
+				"os-minimal-kernel",
+				"os-minimal-userland",
+				"os-nozfs-kernel",
+				"os-nozfs-userland"
+			]
+		},
 		"file-name": "FreeBSD-HEAD-pkgbase-x64-%%DATE%%",
 		"install-script": "/usr/sbin/bsdinstall",
 		"iso-packages": {

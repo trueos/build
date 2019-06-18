@@ -28,6 +28,14 @@
 		"dist-packages": {
 			"default": []
 		},
+		"dist-packages-glob": {
+			"default": [
+				"os-minimal-kernel",
+				"os-minimal-userland",
+				"os-nozfs-kernel",
+				"os-nozfs-userland"
+			]
+		},
 		"file-name": "TrueOS-Unstable-x64-%%DATE%%",
 		"install-script": "",
 		"iso-packages": {

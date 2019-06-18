@@ -988,7 +988,7 @@ create_iso_dir()
 	# Check if we have dist-packages to include on the ISO
 	local _missingpkgs=""
 	# Note: Make sure that "prune-dist-packages" is always last in this list!!
-	for ptype in dist-packages auto-install-packages optional-dist-packages prune-dist-packages
+	for ptype in dist-packages auto-install-packages optional-dist-packages prune-dist-packages dist-packages-glob
 	do
 		for c in $(jq -r '."iso"."'${ptype}'" | keys[]' ${TRUEOS_MANIFEST} 2>/dev/null | tr -s '\n' ' ')
 		do
@@ -1004,7 +1004,14 @@ create_iso_dir()
 						echo "Pruning image dist-file: $prune"
 						rm "${PKG_DISTDIR}/${prune}"
 					done
-					
+				elif [ "${ptype}" = "dist-packages-glob" ] ; then
+					echo "Fetching image dist-files for: $i"
+					pkg-static -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh \
+						-R tmp/repo-config \
+						fetch -y -d -o ${PKG_DISTDIR} -g $i\*
+					if [ $? -ne 0 ] ; then
+						exit_err "Failed copying dist-package $i to ISO..."
+					fi
 				else
 					echo "Fetching image dist-files for: $i"
 					pkg-static -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh \
