@@ -62,7 +62,12 @@
 				"description":"Minimal world with less optional features."
 			},
 			"nozfs":{
-				"description":"TrueOS using ports OpenZFS for base file-system."
+				"description":"Base system without built-in ZFS"
+			},
+			"openzfs":{
+				"description":"Base system with OpenZFS from ports",
+				"flavor":"nozfs",
+				"packages":"openzfs"
 			}
 		},
 		"overlay": {

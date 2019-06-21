@@ -44,6 +44,22 @@
 				"sysutils/pc-sysinstall"
 			]
 		},
+		"os-flavors": {
+			"generic": {
+				"description":"Default TrueOS world / kernel"
+			},
+			"minimal":{
+				"description":"Minimal world with less optional features."
+			},
+			"nozfs":{
+				"description":"Base system without built-in ZFS"
+			},
+			"openzfs":{
+				"description":"Base system with OpenZFS from ports",
+				"flavor":"nozfs",
+				"packages":"openzfs"
+			}
+		},
 		"overlay": {
 		},
 		"prune": {
