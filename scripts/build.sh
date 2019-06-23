@@ -1189,6 +1189,7 @@ prune_iso()
 	# Nuke /rescue on image, its huge
 	rm -rf "${ISODIR}/rescue"
 	rm ${ISODIR}/usr/lib/*.a
+	rm ${ISODIR}/usr/local/lib/*.a
 
 	# User-specified pruning
 	# Check if we have paths to prune from the ISO before build
