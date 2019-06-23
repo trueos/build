@@ -38,7 +38,9 @@
 		"file-name": "FreeBSD-12-pkgbase-x64-%%DATE%%",
 		"install-script": "/usr/sbin/bsdinstall",
 		"iso-packages": {
-			"default": [ ]
+			"default": [
+				"sysutils/openzfs"
+			]
 		},
 		"overlay": {
 		},

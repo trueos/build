@@ -49,6 +49,7 @@
 		},
 		"iso-packages": {
 			"default": [
+				"sysutils/openzfs",
 				"sysutils/pc-installdialog",
 				"sysutils/pc-sysinstall",
 				"textproc/jq"

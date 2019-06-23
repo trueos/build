@@ -38,7 +38,9 @@
 		"file-name": "FreeBSD-HEAD-pkgbase-x64-%%DATE%%",
 		"install-script": "/usr/sbin/bsdinstall",
 		"iso-packages": {
-			"default": [ ]
+			"default": [
+				"sysutils/openzfs"
+			]
 		},
 		"overlay": {
 		},
