@@ -919,6 +919,7 @@ clean_iso_dir()
 		return 0
 	fi
 	rm -rf ${ISODIR} >/dev/null 2>/dev/null
+	chflags -R noschg ${ISODIR}/tmp/* >/dev/null 2>/dev/null
 	chflags -R noschg ${ISODIR} >/dev/null 2>/dev/null
 	rm -rf ${ISODIR}
 }
