@@ -1683,6 +1683,7 @@ case $1 in
 		   ;;
 	iso) env_check
 	     do_iso_create
+	     clean_iso_dir
 	     ;;
 	 vm) env_check
 	     do_vm_create
