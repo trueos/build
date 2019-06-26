@@ -37,4 +37,15 @@ if [ $? -ne 0 ] ; then
 	exit 1
 fi
 
+# Set up to mount at boot
+mkdir -p vm-mnt/etc
+glabel label /dev/${DISK}p2 rootfs0
+if [ $? -ne 0 ] ; then
+	exit 1
+fi
+echo "/dev/label/rootfs0	/	ufs	rw	1	1" > vm-mnt/etc/fstab
+if [ $? -ne 0 ] ; then
+	exit 1
+fi
+
 # Disk provision done
