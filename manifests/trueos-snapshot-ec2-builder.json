@@ -21,7 +21,6 @@
 				"devel/gmake",
 				"devel/git-lite",
 				"devel/hub",
-				"devel/py-pip@py27",
 				"devel/py-pytest",
 				"devel/py-six",
 				"editors/vim-console",
@@ -54,6 +53,11 @@
 				"www/yarn"
 			]
 		},
+		"auto-install-packages-glob": {
+			"default": [
+				"py27-pip"
+			 ]
+                },
 		"auto-install-script": "",
 		"dist-packages": {
 			"default": []
@@ -114,7 +118,9 @@
 	"ports": {
 		"branch": "trueos-master",
 		"build": {
-			"default": []
+			"default": [
+				"devel/py-pip@py27"
+			]
 		},
 		"build-all": false,
 		"make.conf": {

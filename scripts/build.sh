@@ -1492,7 +1492,7 @@ create_vm_dir()
 		pobj="iso"
 	fi
 	# - Now loop through the list
-	for ptype in auto-install-packages
+	for ptype in auto-install-packages auto-install-packages-glob
 	do
 		for c in $(jq -r '."'${pobj}'"."'${ptype}'" | keys[]' ${TRUEOS_MANIFEST} 2>/dev/null | tr -s '\n' ' ')
 		do
