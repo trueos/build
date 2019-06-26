@@ -39,7 +39,7 @@ fi
 
 # Set up to mount at boot
 mkdir -p vm-mnt/etc
-glabel label /dev/${DISK}p2 rootfs0
+glabel label rootfs0 /dev/${DISK}p2
 if [ $? -ne 0 ] ; then
 	exit 1
 fi

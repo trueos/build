@@ -18,6 +18,8 @@
 		"auto-install-packages": {
 			"default": [
 				"archivers/pxz",
+				"devel/libtool",
+				"devel/gettext-runtime",
 				"devel/gmake",
 				"devel/git-lite",
 				"devel/hub",
