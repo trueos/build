@@ -21,7 +21,7 @@
 				"devel/gmake",
 				"devel/git-lite",
 				"devel/hub",
-				"devel/py-pip@27",
+				"devel/py-pip@py27",
 				"devel/py-pytest",
 				"devel/py-six",
 				"editors/vim-console",
