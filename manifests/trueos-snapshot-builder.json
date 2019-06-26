@@ -29,7 +29,9 @@
 		},
 		"auto-install-script": "",
 		"dist-packages": {
-			"default": []
+			"default": [
+				"sysutils/openzfs"
+			]
 		},
 		"dist-packages-glob": {
 			"default": [
