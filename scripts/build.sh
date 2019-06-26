@@ -1562,8 +1562,9 @@ run_ec2_setup() {
 	ln -s /usr/local/etc/init.d/ec2_fetchkey ${VMDIR}/etc/runlevels/default/ec2_fetchkey
 	ln -s /usr/local/etc/init.d/ec2_loghostkey ${VMDIR}/etc/runlevels/default/ec2_loghostkey
 
-	# Enable service to grow ZFS boot volume
+	# Enable service to grow boot volume
 	ln -s /etc/init.d/growzfs ${VMDIR}/etc/runlevels/default/growzfs
+	ln -s /etc/init.d/growfs ${VMDIR}/etc/runlevels/default/growfs
 
 	# General EC2 setup
 	sysrc -f ${VMDIR}/etc/rc.conf ec2_fetchkey_user=root
