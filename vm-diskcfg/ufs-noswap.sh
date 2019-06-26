@@ -27,7 +27,7 @@ if [ $? -ne 0 ] ; then
 	exit 1
 fi
 
-newfs -U -J /dev/${DISK}p2
+newfs -U -J -L rootfs0 /dev/${DISK}p2
 if [ $? -ne 0 ] ; then
 	exit 1
 fi
@@ -39,11 +39,7 @@ fi
 
 # Set up to mount at boot
 mkdir -p vm-mnt/etc
-glabel label rootfs0 /dev/${DISK}p2
-if [ $? -ne 0 ] ; then
-	exit 1
-fi
-echo "/dev/label/rootfs0	/	ufs	rw	1	1" > vm-mnt/etc/fstab
+echo "/dev/ufs/rootfs0	/	ufs	rw	1	1" > vm-mnt/etc/fstab
 if [ $? -ne 0 ] ; then
 	exit 1
 fi
