@@ -1397,7 +1397,11 @@ cleanup_md() {
 	if [ ! -e "/dev/${MDDEV}" ] ; then
 		return 0
 	fi
-	zpool export ${VMPOOLNAME}
+	if [ "${VMBOOT}" = "zfs" ] ; then
+		zpool export ${VMPOOLNAME}
+	else
+		umount -f $VMDIR
+	fi
 	mdconfig -d -u ${MDDEV}
 }
 
