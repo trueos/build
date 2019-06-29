@@ -185,6 +185,9 @@ setup_poudriere_conf()
 	if [ -z "${DISTFILES}" ] ; then
 		DISTFILES="${DEFAULT_DISTFILES}"
 	fi
+	if [ ! -d "${DISTFILES}" ] ; then
+		mkdir -p ${DISTFILES}
+	fi
 	_pdconf="${POUDRIERED_DIR}/${POUDRIERE_PORTS}-poudriere.conf"
 	_pdconf2="${POUDRIERED_DIR}/${POUDRIERE_BASE}-poudriere.conf"
 
