@@ -692,6 +692,14 @@ get_pkg_build_list()
 # Start the poudriere build jobs
 build_poudriere()
 {
+	# Ensure the distfiles location exists
+	if [ ! -d "${DISTFILES}" ] ; then
+		mkdir -p ${DISTFILES}
+		if [ $? -ne 0 ] ; then
+			exit_err "Failed creating DISTFILES directory: ${DISTFILES}"
+		fi
+	fi
+
 	# Check if we want to do a bulk build of everything
 	if [ $(jq -r '."ports"."build-all"' ${TRUEOS_MANIFEST}) = "true" ] ; then
 		# Start the build
