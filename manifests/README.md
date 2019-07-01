@@ -110,7 +110,7 @@ The "iso" target within the manifest controls all the options specific to creati
    * **url** (string) : Url to the repository (svn/git), URL to fetch tar file (tar), or path to the directory (local)
 * **install-dialog** (JSON object) : Custom options for pc-installdialog (if a custom installer is not desired)
    * **pages** (JSON Array of strings) : List of pages (in order) to show during installation procedure.
-      * Available Pages: "os_flavor", "root_pw","create_user", "disk", and "networking"
+      * Available Pages: "os_flavor", "root_pw","create_user", "disk", "pool_name", and "networking"
       * Default Pages: ["os_flavor", "disk", "root_pw", "create_user", "networking"]
    
 #### ISO Example
