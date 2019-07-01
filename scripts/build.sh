@@ -122,6 +122,11 @@ POUDRIERE_LOGDIR="${POUDRIERE_BASEFS}/data/logs"
 POUDRIERE_PKGLOGS="${POUDRIERE_LOGDIR}/bulk/${POUDRIERE_BASE}-${POUDRIERE_PORTS}"
 POUDRIERED_DIR=/usr/local/etc/poudriere.d
 
+# Quick validation that the poudriere BASEFS directory exists
+if [ ! -d "${POUDRIERE_BASEFS}" ] ; then
+  mkdir -p "${POUDRIERE_BASEFS}"
+fi
+
 # Temp location for ISO files
 ISODIR="tmp/iso"
 
