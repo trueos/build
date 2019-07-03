@@ -1011,7 +1011,7 @@ create_iso_dir()
 					echo "Fetching image dist-files for: $i"
 					pkg-static -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh \
 						-R tmp/repo-config \
-						fetch -y -d -o ${PKG_DISTDIR} -g $i\*
+						fetch -y -d -o ${PKG_DISTDIR} -g $i
 					if [ $? -ne 0 ] ; then
 						exit_err "Failed copying dist-package $i to ISO..."
 					fi
