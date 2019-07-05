@@ -534,7 +534,7 @@ checkout_os_sources()
 is_jail_dirty()
 {
 	poudriere jail -l | grep -q -w "${POUDRIERE_BASE}"
-	if [ $? -ne 0 ] ; then
+	if [ $? -ne 0 ]  || [ ! -d "${POUDRIERE_JAILDIR}" ] ; then
 		return 1
 	fi
 
