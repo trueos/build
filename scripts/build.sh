@@ -694,9 +694,25 @@ get_pkg_build_list()
 	mv ${1}.new ${1}
 }
 
+setup_ports_blacklist()
+{
+	# Setup the ports blacklist based on the options in the ${TRUEOS_MANIFEST}
+	local BLFile="${POUDRIERED_DIR}/${POUDRIERE_BASE}-blacklist"
+	# Re-initialize the blacklist file (delete it at the outset)
+	if [ -e "${BLFILE}" ] ; then rm "${BLFile}" ; fi
+	# Now go through and re-add any ports from the manifest to the blacklist file
+	for origin in $(jq -r '."ports"."blacklist"[]' ${TRUEOS_MANIFEST} 2>/dev/null | tr -s '\n' ' ')
+	do
+		echo "${origin}" >> "${BLFile}"
+	done
+}
+
 # Start the poudriere build jobs
 build_poudriere()
 {
+	# First reset the ports blacklist
+	setup_ports_blacklist
+
 	# Check if we want to do a bulk build of everything
 	if [ $(jq -r '."ports"."build-all"' ${TRUEOS_MANIFEST}) = "true" ] ; then
 		# Start the build
