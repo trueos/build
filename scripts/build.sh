@@ -699,7 +699,7 @@ setup_ports_blacklist()
 	# Setup the ports blacklist based on the options in the ${TRUEOS_MANIFEST}
 	local BLFile="${POUDRIERED_DIR}/${POUDRIERE_BASE}-blacklist"
 	# Re-initialize the blacklist file (delete it at the outset)
-	if [ -e "${BLFILE}" ] ; then rm "${BLFile}" ; fi
+	if [ -e "${BLFile}" ] ; then rm "${BLFile}" ; fi
 	# Now go through and re-add any ports from the manifest to the blacklist file
 	for origin in $(jq -r '."ports"."blacklist"[]' ${TRUEOS_MANIFEST} 2>/dev/null | tr -s '\n' ' ')
 	do
