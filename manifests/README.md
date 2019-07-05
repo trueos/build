@@ -258,6 +258,7 @@ The "ports" target allows for configuring the build targets and options for the 
    * **default** (JSON array of strings) : Default list (required)
    * **ENV_VARIABLE** (JSON array of strings) : Additional list to be added to the "default" list **if** an environment variable with the same name is set
 * **strip-plist** (JSON array of strings) : List of files or directories to remove from any packages that try to use them.
+* **blacklist** (JSON array of strings) : List of port origins to ignore during the build.
 
 #### Ports Example
 ```
