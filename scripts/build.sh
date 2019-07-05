@@ -760,6 +760,7 @@ build_poudriere()
 		cp "$(find ${POUDRIERE_PORTDIR} -maxdepth 3 -name CHANGES)" ${mandir}/CHANGES
 		# Assemble a quick list of all the ports/packages that are available in the repo
 		mk_repo_config
+		pkg-static -R tmp/repo-config update -y
 		pkg-static -R tmp/repo-config rquery -a "%o : %n : %v" > "${mandir}/pkg.list"
 	fi
 	return 0
