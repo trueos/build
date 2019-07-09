@@ -139,7 +139,7 @@
 				"os/userland-devtools@all",
 				"os/userland-debug@all",
 				"os/userland-lib32@all",
-				"os/userland-lib32-devtools@all",
+				"os/userland-lib32-development@all",
 				"os/kernel@all",
 				"os/kernel-debug@all",
 				"os/kernel-debug-symbols@all",
