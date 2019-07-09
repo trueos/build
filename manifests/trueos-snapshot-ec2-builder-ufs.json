@@ -29,6 +29,7 @@
 				"net/bsdec2-image-upload",
 				"net/rsync",
 				"os/userland",
+				"os/userland-devtools",
 				"os/kernel",
 				"security/ca_root_nss",
 				"security/sshpass",

@@ -31,6 +31,7 @@
 				"net/bsdec2-image-upload",
 				"net/rsync",
 				"os/userland",
+				"os/userland-devtools",
 				"os/kernel",
 				"ports-mgmt/poudriere-trueos",
 				"security/ca_root_nss",
