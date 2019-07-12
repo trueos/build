@@ -41,7 +41,6 @@
 				"security/ca_root_nss",
 				"sysutils/ansible",
 				"sysutils/ec2-scripts",
-				"sysutils/sysup",
 				"textproc/jq",
 				"www/nginx",
 				"www/py-requests",

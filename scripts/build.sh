@@ -1476,6 +1476,40 @@ clean_vm_dir() {
 	mkdir -p vm-dir
 }
 
+umount_altroot_pkgdir()
+{
+	local aroot="$1"
+	if [ -z "$aroot" ] ; then
+		exit_err "Missing altroot for mount"
+	fi
+
+	# Check if target dir exists
+	umount -f "${aroot}${POUDRIERE_PKGDIR}"
+	return $?
+
+}
+
+
+mount_altroot_pkgdir()
+{
+	local aroot="$1"
+	if [ -z "$aroot" ] ; then
+		exit_err "Missing altroot for mount"
+	fi
+
+	# Check if target dir exists
+	if [ ! -d "${aroot}${POUDRIERE_PKGDIR}" ] ; then
+		mkdir -p "${aroot}${POUDRIERE_PKGDIR}"
+	fi
+
+	# Mount the dir now
+	mount -t nullfs ${POUDRIERE_PKGDIR} ${aroot}${POUDRIERE_PKGDIR}
+	if [ $? -ne 0 ] ; then
+		exit_err "Failed mounting pkgdir in altroot: ${aroot}${POUDRIERE_PKGDIR}"
+	fi
+
+}
+
 create_vm_dir()
 {
 	ABI=$(pkg-static -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh config ABI)
@@ -1521,13 +1555,22 @@ create_vm_dir()
 
 	done
 
+	unset PKG_DBDIR
+	mv ${VMDIR}/tmp/pkgdb/* ${VMDIR}/var/db/pkg/
+	rmdir ${VMDIR}/tmp/pkgdb
+
 	# Install the packages from JSON manifest
 	# - get whether to use the "iso" or "vm" parent object
+
 	local pobj="vm"
 	jq -e '."vm"."auto-install-packages"' ${TRUEOS_MANIFEST} 2>/dev/null
 	if [ $? -ne 0 ] ; then
 		pobj="iso"
 	fi
+
+	# Mount the Package Directory in the chroot
+	mount_altroot_pkgdir "${VMDIR}"
+
 	# - Now loop through the list
 	for ptype in auto-install-packages auto-install-packages-glob
 	do
@@ -1539,8 +1582,8 @@ create_vm_dir()
 			do
 				if [ -z "${i}" ] ; then continue; fi
 				echo "Installing: $i"
-				pkg-static -r ${VMDIR} -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh \
-					-R tmp/repo-config \
+				pkg-static -c ${VMDIR} -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh \
+					-R /tmp/repo-config \
 					install -y ${i}
 				if [ $? -ne 0 ] ; then
 					exit_err "Failed installing $i to VM..."
@@ -1548,9 +1591,7 @@ create_vm_dir()
 			done
 		done
 	done
-	unset PKG_DBDIR
-	mv ${VMDIR}/tmp/pkgdb/* ${VMDIR}/var/db/pkg/
-	rmdir ${VMDIR}/tmp/pkgdb
+	umount_altroot_pkgdir "${VMDIR}"
 }
 
 run_vm_post_install() {
