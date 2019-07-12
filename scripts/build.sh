@@ -808,7 +808,7 @@ super_clean_poudriere()
 	for jail_ds in `zfs list | grep -e "/poudriere/jails/${POUDRIERE_BASE}" | grep -E '(-ref/)[0-9]+' | cut -w -f 1`
 	do
 		echo "Removing stale package build dataset: ${jail_ds}"
-		zfs destroy "${jail_ds}"
+		zfs destroy -r "${jail_ds}"
 	done
 }
 
