@@ -1424,6 +1424,10 @@ load_vm_settings() {
 		zfs) ;;
 		*) exit_err "Unknown vm.boot option!" ;;
 	esac
+	VMPOOL=$(jq -r '."vm"."pool-name"' ${TRUEOS_MANIFEST} 2>/dev/null)
+	if [ -n "${VMPOOL}" -a "$VMPOOL" != "null" ] ; then
+		VMPOOLNAME="${VMPOOL}"
+	fi
 }
 
 cleanup_md() {

@@ -136,6 +136,7 @@
 		"boot":"zfs",
 		"disk-config":"zfs-noswap",
 		"file-name": "TrueOS-Snapshot-EC2-x64-%%GITHASH%%-%%DATE%%",
+		"pool-name":"zroot",
 		"size":"3G",
 		"type":"ec2",
 		"vm-base-packages": {

@@ -130,6 +130,7 @@
 		"boot":"ufs",
 		"disk-config":"ufs-noswap",
 		"file-name": "TrueOS-Snapshot-UFS-EC2-x64-%%GITHASH%%-%%DATE%%",
+		"pool-name": "zroot",
 		"size":"3G",
 		"type":"ec2",
 		"vm-base-packages": {
