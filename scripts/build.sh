@@ -802,6 +802,14 @@ super_clean_poudriere()
 			fi
 		fi
 	done
+	#Now look for any leftover ZFS datasets for previous build jails
+	# These are typically left behind if something like a system reboot happens during a build
+	#  but poudriere does not know to scan/clean them before starting a new build
+	for jail_ds in `zfs list | grep -e "/poudriere/jails/${POUDRIERE_BASE}" | grep -E '(-ref/)[0-9]+' | cut -w -f 1`
+	do
+		echo "Removing stale package build dataset: ${jail_ds}"
+		zfs destroy -r "${jail_ds}"
+	done
 }
 
 # If we did a bulk -a of poudriere, ensure we have everything mentioned in the MANIFEST
