@@ -1424,9 +1424,9 @@ load_vm_settings() {
 		zfs) ;;
 		*) exit_err "Unknown vm.boot option!" ;;
 	esac
-	VMPOOL=$(jq -r '."vm"."pool-name"' ${TRUEOS_MANIFEST} 2>/dev/null)
-	if [ -n "${VMPOOL}" -a "$VMPOOL" != "null" ] ; then
-		VMPOOLNAME="${VMPOOL}"
+	VMONDISKPOOL=$(jq -r '."vm"."pool-name"' ${TRUEOS_MANIFEST} 2>/dev/null)
+	if [ -z "${VMONDISKPOOL}" -o "$VMONDISKPOOL" = "null" ] ; then
+		VMONDISKPOOL="zroot"
 	fi
 }
 
@@ -1460,7 +1460,7 @@ create_vm_disk() {
 	trap cleanup_md SIGTERM
 	trap cleanup_md EXIT
 
-	sh vm-diskcfg/${VMCFG}.sh ${MDDEV} ${VMPOOLNAME}
+	sh vm-diskcfg/${VMCFG}.sh ${MDDEV} ${VMPOOLNAME} ${VMONDISKPOOL}
 	if [ $? -ne 0 ] ; then
 		cleanup_md
 		exit_err "Failed setting up disk for VM image"

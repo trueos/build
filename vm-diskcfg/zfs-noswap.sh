@@ -5,6 +5,7 @@
 
 DISK="$1"
 POOL="$2"
+ONDISKPOOL="$3"
 if [ ! -e "/dev/${DISK}" ] ; then
 	echo "Missing device /dev/${DISK}"
 fi
@@ -32,7 +33,7 @@ if [ $? -ne 0 ] ; then
 	exit 1
 fi
 
-zpool create  -t ${POOL} -m none -R $(pwd)/vm-mnt zroot ${DISK}p2
+zpool create  -t ${POOL} -m none -R $(pwd)/vm-mnt ${ONDISKPOOL} ${DISK}p2
 if [ $? -ne 0 ] ; then
 	exit 1
 fi
