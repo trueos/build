@@ -11,8 +11,8 @@ pipeline {
   environment {
     GH_ORG = 'trueos'
     GH_REPO = 'trueos'
-    POUDRIERE_BASE = 'freebsd12.0-pkgbase-base'
-    POUDRIERE_PORTS = 'freebsd12.0-pkgbase-ports'
+    POUDRIERE_BASE = 'freebsd120-pkgbase-base'
+    POUDRIERE_PORTS = 'freebsd120-pkgbase-ports'
     TRUEOS_VERSION = '12.0'
   }
 
