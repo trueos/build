@@ -1643,10 +1643,15 @@ run_ec2_setup() {
 	ln -s /usr/local/etc/init.d/ec2_configinit ${VMDIR}/etc/runlevels/default/ec2_configinit
 	ln -s /usr/local/etc/init.d/ec2_fetchkey ${VMDIR}/etc/runlevels/default/ec2_fetchkey
 	ln -s /usr/local/etc/init.d/ec2_loghostkey ${VMDIR}/etc/runlevels/default/ec2_loghostkey
+	sysrc -f ${VMDIR}/etc/rc.conf ec2_configinit_enable=YES
+	sysrc -f ${VMDIR}/etc/rc.conf ec2_fetchkey_enable=YES
+	sysrc -f ${VMDIR}/etc/rc.conf ec2_loghostkey_enable=YES
 
 	# Enable service to grow boot volume
 	ln -s /etc/init.d/growzfs ${VMDIR}/etc/runlevels/default/growzfs
 	ln -s /etc/init.d/growfs ${VMDIR}/etc/runlevels/default/growfs
+	sysrc -f ${VMDIR}/etc/rc.conf growfs_enable=YES
+	sysrc -f ${VMDIR}/etc/rc.conf growzfs_enable=YES
 
 	# General EC2 setup
 	sysrc -f ${VMDIR}/etc/rc.conf ec2_fetchkey_user=root
