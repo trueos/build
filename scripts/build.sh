@@ -1582,7 +1582,7 @@ create_vm_dir()
 			do
 				if [ -z "${i}" ] ; then continue; fi
 				echo "Installing: $i"
-				pkg-static -c ${VMDIR} -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh \
+				pkg-static -c ${VMDIR} -o ABI_FILE=/bin/sh \
 					-R /tmp/repo-config \
 					install -y ${i}
 				if [ $? -ne 0 ] ; then

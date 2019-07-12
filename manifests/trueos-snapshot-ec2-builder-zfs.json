@@ -141,6 +141,7 @@
 		"vm-base-packages": {
 			"default": [
 				"os-generic-userland",
+				"os-generic-userland-devtools",
 				"os-generic-kernel"
 			]
 		}
