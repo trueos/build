@@ -1487,10 +1487,8 @@ umount_altroot_pkgdir()
 		exit_err "Missing altroot for mount"
 	fi
 
-	# Check if target dir exists
 	umount -f "${aroot}${POUDRIERE_PKGDIR}"
-	return $?
-
+	umount -f "${aroot}/dev"
 }
 
 
@@ -1510,6 +1508,12 @@ mount_altroot_pkgdir()
 	mount -t nullfs ${POUDRIERE_PKGDIR} ${aroot}${POUDRIERE_PKGDIR}
 	if [ $? -ne 0 ] ; then
 		exit_err "Failed mounting pkgdir in altroot: ${aroot}${POUDRIERE_PKGDIR}"
+	fi
+
+	# Mount devfs
+	mount -t devfs devfs ${aroot}/dev
+	if [ $? -ne 0 ] ; then
+		exit_err "Failed mounting devfs in altroot: ${aroot}"
 	fi
 
 }
