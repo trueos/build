@@ -122,9 +122,7 @@
 		"make.conf": {
 			"default": [
 				"os_userland_SET+=DOCS",
-				"os_userland_SET+=LIB32",
-				"security_ca_root_nss_UNSET+=ETCSYMLINK",
-				"security_ca_root_nss_SET+=LOCALSYMLINK"
+				"os_userland_SET+=LIB32"
 			]
 		},
 		"type": "git",
