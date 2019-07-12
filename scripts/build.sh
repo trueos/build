@@ -512,7 +512,7 @@ checkout_os_sources()
 	# Checkout sources
 	GITREPO=$(jq -r '."base-packages"."repo"' ${TRUEOS_MANIFEST} 2>/dev/null)
 	GITBRANCH=$(jq -r '."base-packages"."branch"' ${TRUEOS_MANIFEST} 2>/dev/null)
-	if [ -z "${GITREPO}" -o -z "${GITBRANCH}" ] ; then
+	if [ -z "${GITREPO}" -o -z "${GITBRANCH}" -o "${GITREPO}" = "null" -o "${GITBRANCH}" = "null" ] ; then
 		exit_err "Missing base-packages repo/branch"
 	fi
 
@@ -630,6 +630,19 @@ setup_poudriere_jail()
 	if [ $architecture == ".native" ] ; then
 		poudriere jail -c -j $POUDRIERE_BASE -m ports=${POUDRIERE_PORTS} -v ${TRUEOS_VERSION}
 	else
+		if [ "$architecture" = "arm.armv7" ] ; then
+			binmiscctl add armv7 --interpreter "/usr/local/bin/qemu-arm-static" \
+				--magic "\x7f\x45\x4c\x46\x01\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x28\x00" \
+				--mask  "\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff" \
+				--size 20 --set-enabled
+		fi
+		if [ "$architecture" = "arm64.aarch64" ] ; then
+			binmiscctl add aarch64 \
+				--interpreter "/usr/local/bin/qemu-aarch64-static" \
+				--magic "\x7f\x45\x4c\x46\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\xb7\x00" \
+				--mask  "\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff" \
+				--size 20 --set-enabled
+		fi
 		poudriere jail -c -j $POUDRIERE_BASE -m ports=${POUDRIERE_PORTS} -v ${TRUEOS_VERSION} -a ${architecture}
 	fi
 	if [ $? -ne 0 ] ; then

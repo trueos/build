@@ -6,7 +6,7 @@ snapshot builds of freebsd/releng/12.0 branch.
 */
 
 pipeline {
-  agent { label 'TrueOS-Build-Pkgbase' }
+  agent { label 'TrueOS-Build-Stable' }
 
   environment {
     GH_ORG = 'trueos'
