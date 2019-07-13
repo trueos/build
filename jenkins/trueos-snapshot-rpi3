@@ -5,7 +5,7 @@ Jenkins pipeline to create RPI3 images / package sets
 */
 
 pipeline {
-  agent { label 'TrueOS-Build-Snapshot' }
+  agent { label 'TrueOS-Build-Pkgbase' }
 
   environment {
     POUDRIERE_BASE = 'trueos-rpi3-base'
