@@ -128,6 +128,7 @@
 				"devel/git",
 				"dns/mDNSResponder_nss",
 				"editors/vim-console",
+				"emulators/qemu-user-static",
                                 "ftp/wget",
 				"lang/python",
 				"lang/python2",
@@ -146,6 +147,8 @@
 				"os/kernel-symbols@all",
 				"ports-mgmt/poudriere-trueos",
 				"shells/zsh",
+				"sysutils/rpi-firmware",
+				"sysutils/u-boot-rpi3",
 				"textproc/jq",
 				"www/nginx"
 			]
