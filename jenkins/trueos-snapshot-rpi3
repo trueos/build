@@ -1,0 +1,63 @@
+/*
+
+Jenkins pipeline to create RPI3 images / package sets
+
+*/
+
+pipeline {
+  agent { label 'TrueOS-Build-Snapshot' }
+
+  environment {
+    POUDRIERE_BASE = 'trueos-rpi3-base'
+    POUDRIERE_PORTS = 'trueos-rpi3-ports'
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+    stage('Build') {
+      post {
+        always {
+          archiveArtifacts artifacts: 'release/port-logs/latest/**', fingerprint: false
+          archiveArtifacts artifacts: 'release/src-logs/**', fingerprint: false
+        }
+      }
+      environment {
+         SIGNING_KEY = credentials('a50f9ddd-1460-4951-a304-ddbf6f2f7990')
+	 TRUEOS_MANIFEST="${env.WORKSPACE}/manifests/trueos-snapshot-rpi3.json"
+      }
+      steps {
+        sh 'make ports'
+      }
+    }
+    stage('VM') {
+      environment {
+         SIGNING_KEY = credentials('a50f9ddd-1460-4951-a304-ddbf6f2f7990')
+	 TRUEOS_MANIFEST="${env.WORKSPACE}/manifests/trueos-snapshot-rpi3.json"
+      }
+      steps {
+        sh 'make image'
+      }
+    }
+    stage('Publish') {
+      steps {
+        sshagent (credentials: ['ef8c8aff-3b80-4a6a-9e0c-4d015bc5e945']) {
+          sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null trueos@cdn1.tn.ixsystems.com mkdir -p /cdn/pkg.trueos.org/pkg/snapshot-rpi3/FreeBSD:13:amd64/latest || true'
+          sh 'cd release/packages && rsync -av --delete-after --delay-updates -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" . trueos@cdn1.tn.ixsystems.com:/cdn/pkg.trueos.org/pkg/snapshot-rpi3/FreeBSD:13:amd64/latest/'
+          sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null trueos@cdn1.tn.ixsystems.com mkdir -p /cdn/pkg.trueos.org/iso/snapshot-rpi3/ || true'
+          sh 'rsync -av --delete-after --delay-updates -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" release/image/ trueos@cdn1.tn.ixsystems.com:/cdn/pkg.trueos.org/iso/snapshot-rpi3/'
+        }
+      }
+    }
+  }
+  post {
+    success {
+      script {
+        cleanWs notFailBuild: true
+      }
+    }
+  }
+}
