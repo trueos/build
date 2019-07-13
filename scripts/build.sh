@@ -130,8 +130,8 @@ fi
 # Temp location for ISO files
 ISODIR="tmp/iso"
 
-# Temp pool name to use for VM creation
-VMPOOLNAME="${VMPOOLNAME:-vm-gen-pool}"
+# Temp pool name to use for IMG creation
+IMGPOOLNAME="${IMGPOOLNAME:-img-gen-pool}"
 
 #Source the ports-interactions scripts
 . "$(dirname $0)/ports-interactions.sh"
@@ -627,21 +627,11 @@ setup_poudriere_jail()
 	export KERNEL_MAKE_FLAGS="$(get_kernel_flags)"
 	export WORLD_MAKE_FLAGS="$(get_world_flags)"
 	architecture="$(get_architecture)"
-	if [ $architecture == ".native" ] ; then
+	if [ "$architecture" = ".native" ] ; then
 		poudriere jail -c -j $POUDRIERE_BASE -m ports=${POUDRIERE_PORTS} -v ${TRUEOS_VERSION}
 	else
-		if [ "$architecture" = "arm.armv7" ] ; then
-			binmiscctl add armv7 --interpreter "/usr/local/bin/qemu-arm-static" \
-				--magic "\x7f\x45\x4c\x46\x01\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x28\x00" \
-				--mask  "\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff" \
-				--size 20 --set-enabled
-		fi
-		if [ "$architecture" = "arm64.aarch64" ] ; then
-			binmiscctl add aarch64 \
-				--interpreter "/usr/local/bin/qemu-aarch64-static" \
-				--magic "\x7f\x45\x4c\x46\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\xb7\x00" \
-				--mask  "\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff" \
-				--size 20 --set-enabled
+		if [ -e "/usr/local/etc/rc.d/qemu_user_static" ] ; then
+			/usr/local/etc/rc.d/qemu_user_static forcestart 2>/dev/null >/dev/null
 		fi
 		poudriere jail -c -j $POUDRIERE_BASE -m ports=${POUDRIERE_PORTS} -v ${TRUEOS_VERSION} -a ${architecture}
 	fi
@@ -725,6 +715,14 @@ build_poudriere()
 {
 	# First reset the ports blacklist
 	setup_ports_blacklist
+
+	# Do we need to start qemu_user_static?
+	architecture="$(get_architecture)"
+	if [ "$architecture" != ".native" ] ; then
+		if [ -e "/usr/local/etc/rc.d/qemu_user_static" ] ; then
+			/usr/local/etc/rc.d/qemu_user_static forcestart 2>/dev/null >/dev/null
+		fi
+	fi
 
 	# Check if we want to do a bulk build of everything
 	if [ $(jq -r '."ports"."build-all"' ${TRUEOS_MANIFEST}) = "true" ] ; then
@@ -1086,8 +1084,8 @@ create_iso_dir()
 
 	# Cleanup and move the updated pkgdb
 	unset PKG_DBDIR
-	mv ${VMDIR}/tmp/pkgdb/* ${VMDIR}/var/db/pkg/
-	rmdir ${VMDIR}/tmp/pkgdb
+	mv ${IMGDIR}/tmp/pkgdb/* ${IMGDIR}/var/db/pkg/
+	rmdir ${IMGDIR}/tmp/pkgdb
 
 	# Create the repo DB
 	echo "Creating installer pkg repo"
@@ -1423,49 +1421,57 @@ select_manifest()
 	echo "New Default Manifest: ${MANIFEST}"
 }
 
-load_vm_settings() {
-	# Load our VM settings
-	VMTYPE=$(jq -r '."vm"."type"' ${TRUEOS_MANIFEST} 2>/dev/null)
-	VMSIZE=$(jq -r '."vm"."size"' ${TRUEOS_MANIFEST} 2>/dev/null)
-	VMCFG=$(jq -r '."vm"."disk-config"' ${TRUEOS_MANIFEST} 2>/dev/null)
-	if [ ! -e "vm-diskcfg/${VMCFG}.sh" ] ; then
-		exit_err "Missing cfg: vm-diskcfg/${VMCFG}.sh"
+load_image_settings() {
+	# Load our IMG settings
+	IMGTYPE=$(jq -r '."image"."type"' ${TRUEOS_MANIFEST} 2>/dev/null)
+	IMGSIZE=$(jq -r '."image"."size"' ${TRUEOS_MANIFEST} 2>/dev/null)
+	IMGCFG=$(jq -r '."image"."disk-config"' ${TRUEOS_MANIFEST} 2>/dev/null)
+	if [ ! -e "img-diskcfg/${IMGCFG}.sh" ] ; then
+		exit_err "Missing cfg: img-diskcfg/${IMGCFG}.sh"
 	fi
-	VMBOOT=$(jq -r '."vm"."boot"' ${TRUEOS_MANIFEST} 2>/dev/null)
-	case $VMBOOT in
+	IMGBOOT=$(jq -r '."image"."boot"' ${TRUEOS_MANIFEST} 2>/dev/null)
+	case $IMGBOOT in
 		ufs) ;;
 		zfs) ;;
-		*) exit_err "Unknown vm.boot option!" ;;
+		arm) ;;
+		*) exit_err "Unknown image.boot option!" ;;
 	esac
-	VMONDISKPOOL=$(jq -r '."vm"."pool-name"' ${TRUEOS_MANIFEST} 2>/dev/null)
-	if [ -z "${VMONDISKPOOL}" -o "$VMONDISKPOOL" = "null" ] ; then
-		VMONDISKPOOL="zroot"
+	IMGONDISKPOOL=$(jq -r '."image"."pool-name"' ${TRUEOS_MANIFEST} 2>/dev/null)
+	if [ -z "${IMGONDISKPOOL}" -o "$IMGONDISKPOOL" = "null" ] ; then
+		IMGONDISKPOOL="zroot"
 	fi
+
+	# Check if we have a custom IMGTYPE to import
+	if [ -e "img-cfg/${IMGTYPE}.conf" ] ; then
+		. img-cfg/${IMGTYPE}.conf
+	fi
+
+
 }
 
 cleanup_md() {
 	if [ ! -e "/dev/${MDDEV}" ] ; then
 		return 0
 	fi
-	if [ "${VMBOOT}" = "zfs" ] ; then
-		zpool export ${VMPOOLNAME}
+	if [ "${IMGBOOT}" = "zfs" ] ; then
+		zpool export ${IMGPOOLNAME}
 	else
-		umount -f $VMDIR
+		umount -f $IMGDIR
 	fi
 	mdconfig -d -u ${MDDEV}
 }
 
-# Build a VM disk image based upon specifications in JSON manifest
-create_vm_disk() {
+# Build a disk image based upon specifications in JSON manifest
+create_image_disk() {
 
-	truncate -s $VMSIZE vm-dir/vm-disk.img
+	truncate -s $IMGSIZE img-dir/img-disk.img
 	if [ $? -ne 0 ] ; then
-		exit_err "Failed truncating vm disk image"
+		exit_err "Failed truncating disk image"
 	fi
 
-	export MDDEV=$(mdconfig -a -t vnode -f vm-dir/vm-disk.img)
+	export MDDEV=$(mdconfig ${MD_ARGS} -a -t vnode -f img-dir/img-disk.img)
 	if [ ! -e "/dev/${MDDEV}" ] ; then
-		exit_err "Failed mdconfig of vm-disk.img"
+		exit_err "Failed mdconfig of img-disk.img"
 	fi
 
 	trap cleanup_md SIGPIPE
@@ -1473,24 +1479,24 @@ create_vm_disk() {
 	trap cleanup_md SIGTERM
 	trap cleanup_md EXIT
 
-	sh vm-diskcfg/${VMCFG}.sh ${MDDEV} ${VMPOOLNAME} ${VMONDISKPOOL}
+	sh img-diskcfg/${IMGCFG}.sh ${MDDEV} ${IMGPOOLNAME} ${IMGONDISKPOOL}
 	if [ $? -ne 0 ] ; then
 		cleanup_md
-		exit_err "Failed setting up disk for VM image"
+		exit_err "Failed setting up disk for image"
 	fi
 }
 
-clean_vm_dir() {
+clean_image_dir() {
 
-	if [ -d "release/vm-logs" ] ; then
-		rm -rf release/vm-logs
+	if [ -d "release/img-logs" ] ; then
+		rm -rf release/img-logs
 	fi
-	mkdir -p release/vm-logs
+	mkdir -p release/img-logs
 
-	if [ -d "vm-dir" ] ; then
-		rm -rf vm-dir
+	if [ -d "img-dir" ] ; then
+		rm -rf img-dir
 	fi
-	mkdir -p vm-dir
+	mkdir -p img-dir
 }
 
 umount_altroot_pkgdir()
@@ -1531,20 +1537,20 @@ mount_altroot_pkgdir()
 
 }
 
-create_vm_dir()
+create_image_dir()
 {
 	ABI=$(pkg-static -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh config ABI)
 
 	mk_repo_config
 
 	# Check for conditionals packages to install
-	for c in $(jq -r '."vm"."vm-base-packages" | keys[]' ${TRUEOS_MANIFEST} 2>/dev/null | tr -s '\n' ' ')
+	for c in $(jq -r '."image"."image-base-packages" | keys[]' ${TRUEOS_MANIFEST} 2>/dev/null | tr -s '\n' ' ')
 	do
 		eval "CHECK=\$$c"
 		if [ -z "$CHECK" -a "$c" != "default" ] ; then continue; fi
 
 		# We have a conditional set of packages to include, lets do it
-		for i in $(jq -r '."iso"."vm-base-packages"."'$c'" | join(" ")' ${TRUEOS_MANIFEST})
+		for i in $(jq -r '."iso"."image-base-packages"."'$c'" | join(" ")' ${TRUEOS_MANIFEST})
 		do
 			BASE_PACKAGES="${BASE_PACKAGES} ${i}"
 		done
@@ -1558,39 +1564,39 @@ create_vm_dir()
 		BASE_PACKAGES="${BASE_PACKAGES} ports-mgmt/pkg"
 	fi
 
-	mkdir -p ${VMDIR}/tmp
-	mkdir -p ${VMDIR}/var/db/pkg
-	cp -r tmp/repo-config ${VMDIR}/tmp/repo-config
+	mkdir -p ${IMGDIR}/tmp
+	mkdir -p ${IMGDIR}/var/db/pkg
+	cp -r tmp/repo-config ${IMGDIR}/tmp/repo-config
 
 	export PKG_DBDIR="tmp/pkgdb"
 
-	# Install the base packages into vm dir
+	# Install the base packages into image dir
 	for pkg in ${BASE_PACKAGES}
 	do
-		pkg-static -r ${VMDIR} -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh \
+		pkg-static -r ${IMGDIR} -o ABI_FILE=${POUDRIERE_JAILDIR}/bin/sh \
 			-R tmp/repo-config \
 			install -y ${pkg}
 		if [ $? -ne 0 ] ; then
-			exit_err "Failed installing base packages to VM directory..."
+			exit_err "Failed installing base packages to IMG directory..."
 		fi
 
 	done
 
 	unset PKG_DBDIR
-	mv ${VMDIR}/tmp/pkgdb/* ${VMDIR}/var/db/pkg/
-	rmdir ${VMDIR}/tmp/pkgdb
+	mv ${IMGDIR}/tmp/pkgdb/* ${IMGDIR}/var/db/pkg/
+	rmdir ${IMGDIR}/tmp/pkgdb
 
 	# Install the packages from JSON manifest
-	# - get whether to use the "iso" or "vm" parent object
+	# - get whether to use the "iso" or "image" parent object
 
-	local pobj="vm"
-	jq -e '."vm"."auto-install-packages"' ${TRUEOS_MANIFEST} 2>/dev/null
+	local pobj="image"
+	jq -e '."image"."auto-install-packages"' ${TRUEOS_MANIFEST} 2>/dev/null
 	if [ $? -ne 0 ] ; then
 		pobj="iso"
 	fi
 
 	# Mount the Package Directory in the chroot
-	mount_altroot_pkgdir "${VMDIR}"
+	mount_altroot_pkgdir "${IMGDIR}"
 
 	# - Now loop through the list
 	for ptype in auto-install-packages auto-install-packages-glob
@@ -1603,45 +1609,49 @@ create_vm_dir()
 			do
 				if [ -z "${i}" ] ; then continue; fi
 				echo "Installing: $i"
-				pkg-static -c ${VMDIR} -o ABI_FILE=/bin/sh \
+				pkg-static -c ${IMGDIR} -o ABI_FILE=/bin/sh \
 					-R /tmp/repo-config \
 					install -y ${i}
 				if [ $? -ne 0 ] ; then
-					exit_err "Failed installing $i to VM..."
+					exit_err "Failed installing $i to IMG..."
 				fi
 			done
 		done
 	done
-	umount_altroot_pkgdir "${VMDIR}"
+	umount_altroot_pkgdir "${IMGDIR}"
 }
 
-run_vm_post_install() {
+run_image_post_install() {
 	# Stamp the boot-loader
-	case ${VMBOOT} in
+	case ${IMGBOOT} in
 		ufs)
 			echo "Stamping UFS boot-loader"
-			echo "gpart bootcode -b ${VMDIR}/boot/pmbr -p ${VMDIR}/boot/gptboot -i 1 ${MDDEV}"
-			gpart bootcode -b ${VMDIR}/boot/pmbr -p ${VMDIR}/boot/gptboot -i 1 ${MDDEV} || exit_err "failed stamping boot!"
+			echo "gpart bootcode -b ${IMGDIR}/boot/pmbr -p ${IMGDIR}/boot/gptboot -i 1 ${MDDEV}"
+			gpart bootcode -b ${IMGDIR}/boot/pmbr -p ${IMGDIR}/boot/gptboot -i 1 ${MDDEV} || exit_err "failed stamping boot!"
 			;;
 		zfs) 
 			echo "Stamping ZFS boot-loader"
-			echo "gpart bootcode -b ${VMDIR}/boot/pmbr -p ${VMDIR}/boot/gptzfsboot -i 1 ${MDDEV}"
-			gpart bootcode -b ${VMDIR}/boot/pmbr -p ${VMDIR}/boot/gptzfsboot -i 1 ${MDDEV} || exit_err "failed stamping boot!"
-			touch ${VMDIR}/boot/loader.conf
-			if [ -e "${VMDIR}/boot/modules/openzfs.ko" ] ; then
-				sysrc -f ${VMDIR}/boot/loader.conf openzfs_load=YES
+			echo "gpart bootcode -b ${IMGDIR}/boot/pmbr -p ${IMGDIR}/boot/gptzfsboot -i 1 ${MDDEV}"
+			gpart bootcode -b ${IMGDIR}/boot/pmbr -p ${IMGDIR}/boot/gptzfsboot -i 1 ${MDDEV} || exit_err "failed stamping boot!"
+			touch ${IMGDIR}/boot/loader.conf
+			if [ -e "${IMGDIR}/boot/modules/openzfs.ko" ] ; then
+				sysrc -f ${IMGDIR}/boot/loader.conf openzfs_load=YES
 			else
-				sysrc -f ${VMDIR}/boot/loader.conf zfs_load=YES
+				sysrc -f ${IMGDIR}/boot/loader.conf zfs_load=YES
 			fi
+			;;
+		arm)	arm_boot_setup
+			;;
+		*)
 			;;
 	esac
 
-	case ${VMTYPE} in
+	case ${IMGTYPE} in
 		ec2)
 			run_ec2_setup
 			;;
 		*)
-			echo "vm.type unset, ignoring!"
+			echo "image.type unset, ignoring!"
 			;;
 	esac
 
@@ -1649,61 +1659,61 @@ run_vm_post_install() {
 
 run_ec2_setup() {
 	# Touch a couple common files first
-	touch ${VMDIR}/etc/rc.conf
-	touch ${VMDIR}/boot/loader.conf
+	touch ${IMGDIR}/etc/rc.conf
+	touch ${IMGDIR}/boot/loader.conf
 
 	# Enable EC2 scripts
-	ln -s /usr/local/etc/init.d/ec2_configinit ${VMDIR}/etc/runlevels/default/ec2_configinit
-	ln -s /usr/local/etc/init.d/ec2_fetchkey ${VMDIR}/etc/runlevels/default/ec2_fetchkey
-	ln -s /usr/local/etc/init.d/ec2_loghostkey ${VMDIR}/etc/runlevels/default/ec2_loghostkey
-	sysrc -f ${VMDIR}/etc/rc.conf ec2_configinit_enable=YES
-	sysrc -f ${VMDIR}/etc/rc.conf ec2_fetchkey_enable=YES
-	sysrc -f ${VMDIR}/etc/rc.conf ec2_loghostkey_enable=YES
+	ln -s /usr/local/etc/init.d/ec2_configinit ${IMGDIR}/etc/runlevels/default/ec2_configinit
+	ln -s /usr/local/etc/init.d/ec2_fetchkey ${IMGDIR}/etc/runlevels/default/ec2_fetchkey
+	ln -s /usr/local/etc/init.d/ec2_loghostkey ${IMGDIR}/etc/runlevels/default/ec2_loghostkey
+	sysrc -f ${IMGDIR}/etc/rc.conf ec2_configinit_enable=YES
+	sysrc -f ${IMGDIR}/etc/rc.conf ec2_fetchkey_enable=YES
+	sysrc -f ${IMGDIR}/etc/rc.conf ec2_loghostkey_enable=YES
 
 	# Enable service to grow boot volume
-	ln -s /etc/init.d/growzfs ${VMDIR}/etc/runlevels/default/growzfs
-	ln -s /etc/init.d/growfs ${VMDIR}/etc/runlevels/default/growfs
-	sysrc -f ${VMDIR}/etc/rc.conf growfs_enable=YES
-	sysrc -f ${VMDIR}/etc/rc.conf growzfs_enable=YES
+	ln -s /etc/init.d/growzfs ${IMGDIR}/etc/runlevels/default/growzfs
+	ln -s /etc/init.d/growfs ${IMGDIR}/etc/runlevels/default/growfs
+	sysrc -f ${IMGDIR}/etc/rc.conf growfs_enable=YES
+	sysrc -f ${IMGDIR}/etc/rc.conf growzfs_enable=YES
 
 	# General EC2 setup
-	sysrc -f ${VMDIR}/etc/rc.conf ec2_fetchkey_user=root
-	sysrc -f ${VMDIR}/etc/rc.conf ifconfig_DEFAULT=ALL
-	sysrc -f ${VMDIR}/etc/rc.conf synchronous_dhclient=YES
-	sysrc -f ${VMDIR}/boot/loader.conf if_ena_load=YES
-	sysrc -f ${VMDIR}/boot/loader.conf autoboot_delay="-1"
-	sysrc -f ${VMDIR}/boot/loader.conf beastie_disable=YES
-	sysrc -f ${VMDIR}/boot/loader.conf boot_multicons=YES
+	sysrc -f ${IMGDIR}/etc/rc.conf ec2_fetchkey_user=root
+	sysrc -f ${IMGDIR}/etc/rc.conf ifconfig_DEFAULT=ALL
+	sysrc -f ${IMGDIR}/etc/rc.conf synchronous_dhclient=YES
+	sysrc -f ${IMGDIR}/boot/loader.conf if_ena_load=YES
+	sysrc -f ${IMGDIR}/boot/loader.conf autoboot_delay="-1"
+	sysrc -f ${IMGDIR}/boot/loader.conf beastie_disable=YES
+	sysrc -f ${IMGDIR}/boot/loader.conf boot_multicons=YES
 
 	# Disable keyboard / mouse
-	echo "hint.atkbd.0.disabled=1" >> ${VMDIR}/boot/loader.conf
-	echo "hint.atkbdc.0.disabled=1" >> ${VMDIR}/boot/loader.conf
+	echo "hint.atkbd.0.disabled=1" >> ${IMGDIR}/boot/loader.conf
+	echo "hint.atkbdc.0.disabled=1" >> ${IMGDIR}/boot/loader.conf
 
 	# Setup EC2 NTP server
-	sed -i '' -e 's/^pool/#pool/' -e 's/^#server.*/server 169.254.169.123 iburst/' ${VMDIR}/etc/ntp.conf
-	ln -s /etc/init.d/ntpd ${VMDIR}/etc/runlevels/default/ntpd
+	sed -i '' -e 's/^pool/#pool/' -e 's/^#server.*/server 169.254.169.123 iburst/' ${IMGDIR}/etc/ntp.conf
+	ln -s /etc/init.d/ntpd ${IMGDIR}/etc/runlevels/default/ntpd
 
 	# Disable SSH PAM auth and enable root login
-	echo "PasswordAuthentication no" >>${VMDIR}/etc/ssh/sshd_config
-	echo "ChallengeResponseAuthentication no" >>${VMDIR}/etc/ssh/sshd_config
-	echo "PermitRootLogin yes" >>${VMDIR}/etc/ssh/sshd_config
+	echo "PasswordAuthentication no" >>${IMGDIR}/etc/ssh/sshd_config
+	echo "ChallengeResponseAuthentication no" >>${IMGDIR}/etc/ssh/sshd_config
+	echo "PermitRootLogin yes" >>${IMGDIR}/etc/ssh/sshd_config
 }
 
-do_vm_create() {
-	VMDIR="vm-mnt"
+do_image_create() {
+	IMGDIR="img-mnt"
 
-	clean_vm_dir
+	clean_image_dir
 
-	load_vm_settings
+	load_image_settings
 
-	echo "Creating vm disk image"
-	create_vm_disk
+	echo "Creating disk image"
+	create_image_disk
 
-	echo "Installing VM packages"
-	create_vm_dir
+	echo "Installing IMG packages"
+	create_image_dir
 
 	echo "Running post-install commands"
-	run_vm_post_install
+	run_image_post_install
 
 	echo "Packaging disk image"
 
@@ -1711,29 +1721,29 @@ do_vm_create() {
 	cleanup_md
 
 	# Rename and create checksums of files
-	NAME="vm-disk.img"
-	rm -rf release/vm
-	mkdir -p release/vm
-	mv vm-dir/${NAME} release/vm/${NAME}
+	NAME="img-disk.img"
+	rm -rf release/img
+	mkdir -p release/img
+	mv img-dir/${NAME} release/img/${NAME}
 	if [ -d "${POUDRIERE_PORTDIR}/.git" ] ; then
 		GITHASH=$(git -C ${POUDRIERE_PORTDIR} log -1 --pretty=format:%h)
 	else
 		GITHASH="unknown"
 	fi
-	FILE_RENAME="$(jq -r '."vm"."file-name"' $TRUEOS_MANIFEST)"
+	FILE_RENAME="$(jq -r '."image"."file-name"' $TRUEOS_MANIFEST)"
 	if [ -n "$FILE_RENAME" -a "$FILE_RENAME" != "null" ] ; then
 		DATE="$(date +%Y%m%d)"
 		FILE_RENAME=$(echo $FILE_RENAME | sed "s|%%DATE%%|$DATE|g" | sed "s|%%GITHASH%%|$GITHASH|g" | sed "s|%%TRUEOS_VERSION%%|$TRUEOS_VERSION|g")
 		echo "Renaming ${NAME} -> ${FILE_RENAME}.img"
-		mv release/vm/${NAME} release/vm/${FILE_RENAME}.img
+		mv release/img/${NAME} release/img/${FILE_RENAME}.img
 		NAME="${FILE_RENAME}.img"
 	fi
 	echo "Creating checksums"
-	sha256 -q release/vm/${NAME} > release/vm/${NAME}.sha256
-	md5 -q release/vm/${NAME} > release/vm/${NAME}.md5
-	sign_file release/vm/${NAME}
-	if [ $(jq -r '."vm"."generate-manifest"' ${TRUEOS_MANIFEST}) = "true" ] ; then
-		assemble_file_manifest "release/vm"
+	sha256 -q release/img/${NAME} > release/img/${NAME}.sha256
+	md5 -q release/img/${NAME} > release/img/${NAME}.md5
+	sign_file release/img/${NAME}
+	if [ $(jq -r '."image"."generate-manifest"' ${TRUEOS_MANIFEST}) = "true" ] ; then
+		assemble_file_manifest "release/img"
 	fi
 }
 
@@ -1779,7 +1789,7 @@ case $1 in
 	clean) env_check
 	       clean_jails
 	       clean_iso_dir
-	       clean_vm_dir
+	       clean_image_dir
 	       exit 0
 	       ;;
 	poudriere) env_check
@@ -1790,8 +1800,8 @@ case $1 in
 	     do_iso_create
 	     clean_iso_dir
 	     ;;
-	 vm) env_check
-	     do_vm_create
+	 image) env_check
+	     do_image_create
 	     ;;
 	check)  env_check
 		check_build_environment

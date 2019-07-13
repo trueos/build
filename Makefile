@@ -12,5 +12,5 @@ ports:
 	@sh scripts/build.sh poudriere
 iso:
 	@sh scripts/build.sh iso
-vm:
-	@sh scripts/build.sh vm
+image:
+	@sh scripts/build.sh image

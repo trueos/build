@@ -1,31 +1,43 @@
 {
   "arch": {
-    "platform": "arm64",
-    "arch": "aarch64"
+    "arch": "aarch64",
+    "platform": "arm64"
   },
   "base-packages": {
+    "branch": "trueos/master",
+    "kernel-flags": {
+      "default": [
+        "KERNCONF=GENERIC"
+      ]
+    },
+    "repo": "https://github.com/trueos/trueos",
     "world-flags": {
       "default": [
         "MALLOC_PRODUCTION=YES",
         "WITHOUT_ASSERT_DEBUG=ON"
       ]
-    },
-    "kernel-flags": {
-      "default": [
-        "KERNCONF=GENERIC-NODEBUG"
-      ]
     }
+  },
+  "image": {
+    "boot": "arm",
+    "disk-config": "ufs-rpi3",
+    "file-name": "TrueOS-Snapshot-RPI3-%%GITHASH%%-%%DATE%%",
+    "image-base-packages": {
+      "default": [
+        "os-generic-userland",
+        "os-generic-kernel"
+      ]
+    },
+    "pool-name": "zroot",
+    "size": "2G",
+    "type": "rpi3"
   },
   "iso": {
     "auto-install-packages": {
       "default": [
-        "os/userland",
-        "os/userland-lib32",
-        "os/kernel",
         "security/sudo",
         "sysutils/tmux",
         "security/ca_root_nss",
-        "sysutils/sysup",
         "textproc/jq"
       ]
     },
@@ -33,7 +45,7 @@
     "dist-packages": {
       "default": []
     },
-    "file-name": "TrueOS-Unstable-x64-%%DATE%%",
+    "file-name": "TrueOS-Snapshot-RPI3-x64-%%DATE%%",
     "install-script": "",
     "iso-packages": {
       "default": []
@@ -80,21 +92,25 @@
       "AxxsOeRYAlBFJ4oo2cFVyqkCAwEAAQ==",
       "-----END PUBLIC KEY-----"
     ],
-    "url": "https://pkg.trueos.org/pkg/unstable/${ABI}/latest"
+    "url": "https://pkg.trueos.org/pkg/snapshot-rpi3/${ABI}/latest"
   },
   "pkg-repo-name": "TrueOS",
-  "pkg-train-name": "unstable-aarch64",
+  "pkg-train-name": "aarch64",
   "ports": {
     "branch": "trueos-master",
     "build": {
       "default": [
         "devel/git",
+        "os/kernel@generic",
+        "os/userland@generic",
+        "os/userland-devtools@generic",
         "editors/vim-console"
       ]
     },
-    "build-all": true,
+    "build-all": false,
     "make.conf": {
       "default": [
+        "BASEPKG_ABISTRING=freebsd:13:aarch64"
       ]
     },
     "type": "git",

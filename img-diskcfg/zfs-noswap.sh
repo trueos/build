@@ -14,8 +14,8 @@ if [ -z "$POOL" ] ; then
 	echo "Missing POOL argument"
 fi
 
-if [ ! -d "vm-mnt" ] ; then
-	mkdir vm-mnt
+if [ ! -d "img-mnt" ] ; then
+	mkdir img-mnt
 fi
 
 gpart create -s gpt -f active ${DISK}
@@ -33,7 +33,7 @@ if [ $? -ne 0 ] ; then
 	exit 1
 fi
 
-zpool create  -t ${POOL} -m none -R $(pwd)/vm-mnt ${ONDISKPOOL} ${DISK}p2
+zpool create  -t ${POOL} -m none -R $(pwd)/img-mnt ${ONDISKPOOL} ${DISK}p2
 if [ $? -ne 0 ] ; then
 	exit 1
 fi

@@ -33,7 +33,7 @@ This command will clean up:
 
 * Poudriere jails, ports trees, and mountpoints.
 * ISO output directory : Deleting the output of any "make iso" commands run previously.
-* VM output directory : Deleting the output of any "make vm" commands run previously.
+* VM output directory : Deleting the output of any "make image" commands run previously.
 
 ### make config
 This will launch an interactive prompt to select a build manifest from the example files in the [manifests directory](https://github.com/trueos/build/tree/master/manifests) and use that as the default build manifest.
@@ -79,10 +79,10 @@ Optional inputs (environment variables):
 * **SIGNING_KEY** : This is the private key which should be used to sign the ISO file once it is built.
    * This will also create a "pubkey.pem" file in the output dir which contains the public key for the signature verification
 
-### make vm
+### make image
 |Output Files|Output Logs|
 |:---:|:---:|
-|release/vm |release/vm-logs |
+|release/img |release/img-logs |
 
 Use the package repository to assemble a pre-installed VM image.
 
@@ -92,7 +92,7 @@ Optional inputs (environment variables):
 * **SIGNING_KEY** : This is the private key which should be used to sign the IMG file once it is built.
    * This will also create a "pubkey.pem" file in the output dir which contains the public key for the signature verification
 * **VMPOOLNAME** : Create/use a temporary ZFS pool with this name for the VM build environment.
-   * Default Value: "vm-gen-pool"
+   * Default Value: "image-gen-pool"
  
 # License
 BSD 2 Clause

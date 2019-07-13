@@ -8,8 +8,8 @@ if [ ! -e "/dev/${DISK}" ] ; then
 	echo "Missing device /dev/${DISK}"
 fi
 
-if [ ! -d "vm-mnt" ] ; then
-	mkdir vm-mnt
+if [ ! -d "img-mnt" ] ; then
+	mkdir img-mnt
 fi
 
 gpart create -s gpt -f active ${DISK}
@@ -32,14 +32,14 @@ if [ $? -ne 0 ] ; then
 	exit 1
 fi
 
-mount /dev/${DISK}p2 vm-mnt/
+mount /dev/${DISK}p2 img-mnt/
 if [ $? -ne 0 ] ; then
 	exit 1
 fi
 
 # Set up to mount at boot
-mkdir -p vm-mnt/etc
-echo "/dev/ufs/rootfs0	/	ufs	rw	1	1" > vm-mnt/etc/fstab
+mkdir -p img-mnt/etc
+echo "/dev/ufs/rootfs0	/	ufs	rw	1	1" > img-mnt/etc/fstab
 if [ $? -ne 0 ] ; then
 	exit 1
 fi

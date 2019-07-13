@@ -14,6 +14,21 @@
 		"branch":"trueos/master",
 		"repo":"https://github.com/trueos/trueos"
 	},
+	"image": {
+		"boot":"zfs",
+		"disk-config":"zfs-noswap",
+		"file-name": "TrueOS-Snapshot-EC2-x64-%%GITHASH%%-%%DATE%%",
+		"pool-name":"zroot",
+		"size":"3G",
+		"type":"ec2",
+		"image-base-packages": {
+			"default": [
+				"os-generic-userland",
+				"os-generic-userland-devtools",
+				"os-generic-kernel"
+			]
+		}
+	},
 	"iso": {
 		"auto-install-packages": {
 			"default": [
@@ -131,20 +146,5 @@
 	"poudriere-conf": [
 		"ALLOW_MAKE_JOBS_PACKAGES=\"openjdk8* llvm* mpfr*\""
 	],
-	"version": "1.1",
-	"vm": {
-		"boot":"zfs",
-		"disk-config":"zfs-noswap",
-		"file-name": "TrueOS-Snapshot-EC2-x64-%%GITHASH%%-%%DATE%%",
-		"pool-name":"zroot",
-		"size":"3G",
-		"type":"ec2",
-		"vm-base-packages": {
-			"default": [
-				"os-generic-userland",
-				"os-generic-userland-devtools",
-				"os-generic-kernel"
-			]
-		}
-	}
+	"version": "1.1"
 }
