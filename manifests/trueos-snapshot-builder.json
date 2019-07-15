@@ -148,6 +148,7 @@
 				"ports-mgmt/poudriere-trueos",
 				"shells/zsh",
 				"sysutils/rpi-firmware",
+				"sysutils/smartmontools",
 				"sysutils/u-boot-rpi3",
 				"textproc/jq",
 				"www/nginx"
