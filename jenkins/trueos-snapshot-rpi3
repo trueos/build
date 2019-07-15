@@ -48,7 +48,7 @@ pipeline {
           sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null trueos@cdn1.tn.ixsystems.com mkdir -p /cdn/pkg.trueos.org/pkg/snapshot-rpi3/FreeBSD:13:amd64/latest || true'
           sh 'cd release/packages && rsync -av --delete-after --delay-updates -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" . trueos@cdn1.tn.ixsystems.com:/cdn/pkg.trueos.org/pkg/snapshot-rpi3/FreeBSD:13:amd64/latest/'
           sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null trueos@cdn1.tn.ixsystems.com mkdir -p /cdn/pkg.trueos.org/iso/snapshot-rpi3/ || true'
-          sh 'rsync -av --delete-after --delay-updates -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" release/image/ trueos@cdn1.tn.ixsystems.com:/cdn/pkg.trueos.org/iso/snapshot-rpi3/'
+          sh 'rsync -av --delete-after --delay-updates -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" release/img/ trueos@cdn1.tn.ixsystems.com:/cdn/pkg.trueos.org/iso/snapshot-rpi3/'
         }
       }
     }
