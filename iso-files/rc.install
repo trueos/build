@@ -70,11 +70,11 @@ clear
 if [ -f /etc/trueos-custom-install ]; then
 	# A custom install script exists, lets run that instead of the default
 	$(cat /etc/trueos-custom-install)
-	if [ $? -eq 0 ]; then
-		dialog --backtitle "Installation Media" --title "Complete" --yes-label "Reboot" --no-label "Live CD" --yesno "Installation complete! Would you like to reboot into the installed system now?" 0 0 && reboot
-	else
+#	if [ $? -eq 0 ]; then
+#		dialog --backtitle "Installation Media" --title "Complete" --yes-label "Reboot" --no-label "Live CD" --yesno "Installation complete! Would you like to reboot into the installed system now?" 0 0 && reboot
+#	else
 		. /etc/rc.local
-	fi
+#	fi
 	exit $?
 fi
 
