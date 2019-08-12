@@ -1581,6 +1581,9 @@ create_image_dir()
 		fi
 
 	done
+	# Copy efi loader to tmp for later use
+	cp ${IMGDIR}/boot/loader.efi tmp/loader.efi
+
 
 	unset PKG_DBDIR
 	mv ${IMGDIR}/tmp/pkgdb/* ${IMGDIR}/var/db/pkg/
