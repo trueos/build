@@ -148,7 +148,6 @@
 				"os/kernel-symbols@all",
 				"ports-mgmt/poudriere-trueos",
 				"shells/zsh",
-				"sysutils/htop",
 				"sysutils/rpi-firmware",
 				"sysutils/smartmontools",
 				"sysutils/u-boot-rpi3",
