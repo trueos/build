@@ -1769,6 +1769,65 @@ do_iso_create() {
 	mk_iso_file >release/iso-logs/04_mk_iso_fil.log 2>&1
 }
 
+do_pkgs_pull() {
+	if  ! which -s rclone ; then
+		echo Please install rclone
+		exit
+	fi
+	if [ "$(jq -r '."pkg-repo".rclone_type' ${TRUEOS_MANIFEST})" = "s3" ] ; then
+		rclone_type="s3"
+		url="$(jq -r '."pkg-repo".url' ${TRUEOS_MANIFEST})"
+		provider="$(jq -r '."pkg-repo".rclone_provider' ${TRUEOS_MANIFEST})"
+		auth="$(jq -r '."pkg-repo".rclone_auth' ${TRUEOS_MANIFEST})"
+		endpoint="$(echo $url | cut -d '/' -f 1-3)"
+		bucket="$(echo $url | cut -d '/' -f 4-)"
+		transfers="$(jq -r '."pkg-repo".rclone_transfers' ${TRUEOS_MANIFEST})"
+		rclone_options="${rclone_options} --${rclone_type}-endpoint ${endpoint}"
+		if [ -n "${provider}" ] ; then
+			rclone_options="${rclone_options} --${rclone_type}-provider ${provider}"
+		fi
+		if [ -n "${transfers}" ] ; then
+			rclone_options="${rclone_options} --transfers ${transfers} --checkers ${transfers}"
+		fi
+		rclone -v sync :${rclone_type}:${bucket} release/packages ${rclone_options}
+	else
+		echo "No rclone type specified for pkg-repo"
+	fi
+
+}
+
+do_pkgs_push() {
+	if  ! which -s rclone ; then
+		echo Please install rclone
+		exit
+	fi
+	if [ "$(jq -r '."pkg-repo".rclone_type' ${TRUEOS_MANIFEST})" != "" ] ; then
+		rclone_type="$(jq -r '."pkg-repo".rclone_type' ${TRUEOS_MANIFEST})"
+		url="$(jq -r '."pkg-repo".url' ${TRUEOS_MANIFEST})"
+		provider="$(jq -r '."pkg-repo".rclone_provider' ${TRUEOS_MANIFEST})"
+		auth="$(jq -r '."pkg-repo".rclone_auth' ${TRUEOS_MANIFEST})"
+		endpoint="$(echo $url | cut -d '/' -f 1-3)"
+		bucket="$(echo $url | cut -d '/' -f 4-)"
+		transfers="$(jq -r '."pkg-repo".rclone_transfers' ${TRUEOS_MANIFEST})"
+		if [ -n "${endpoint}" ] ; then
+			rclone_options="${rclone_options} --${rclone_type}-endpoint ${endpoint}"
+		fi
+		if [ -n "${provider}" ] ; then
+			rclone_options="${rclone_options} --${rclone_type}-provider ${provider}"
+		fi
+		if [ -n "${transfers}" ] ; then
+			rclone_options="${rclone_options} --transfers ${transfers}"
+		fi
+		if [ "${auth}" = "env" ] ; then
+			rclone_options="${rclone_options} --${rclone_type}-env-auth"
+		fi
+		rclone -v sync release/packages :${rclone_type}:${bucket} ${rclone_options}
+	else
+		echo "No rclone type specified for pkg-repo"
+	fi
+
+}
+
 # Set a time stamp at start that can be used elsewhere
 export BUILD_EPOCH_TIME=$(date '+%s')
 
@@ -1789,27 +1848,33 @@ if [ "$(id -u )" != "0" ] ; then
 fi
 
 case $1 in
-	clean) env_check
-	       clean_jails
-	       clean_iso_dir
-	       clean_image_dir
-	       exit 0
-	       ;;
+	clean)	env_check
+		clean_jails
+		clean_iso_dir
+		clean_image_dir
+		exit 0
+		;;
 	poudriere) env_check
-		   create_release_links
-		   run_poudriere
-		   ;;
-	iso) env_check
-	     do_iso_create
-	     clean_iso_dir
-	     ;;
-	 image) env_check
-	     do_image_create
-	     ;;
-	check)  env_check
+		create_release_links
+		run_poudriere
+		;;
+	iso)	env_check
+		do_iso_create
+		clean_iso_dir
+		;;
+	image)	env_check
+		do_image_create
+		;;
+	check)	env_check
 		check_build_environment
 		check_version ;;
-	config) select_manifest 
+	config)	select_manifest
+		;;
+	pushpkgs) env_check
+		do_pkgs_push
+		;;
+	pullpkgs) env_check
+		do_pkgs_pull
 		;;
 	*) echo "Unknown option selected" ;;
 esac
